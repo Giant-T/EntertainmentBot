@@ -1,12 +1,61 @@
+import { Client, Events, GatewayIntentBits, REST, Routes } from 'discord.js';
 import * as dotenv from 'dotenv';
+import Ping from './commands/ping';
+import Command from './models/command';
 
 async function main(): Promise<void> {
-  console.log('Démarrage en cours...');
   dotenv.config();
+  console.log('Démarrage en cours...');
 
-  console.log(process.env.TOKEN);
+  const token = process.env.TOKEN;
+  const clientId = process.env.CLIENT_ID;
+  const guildId = process.env.GUILD_ID;
 
-  console.log('Fin du programme.');
+  const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
+  client.once(Events.ClientReady, (c) => {
+    console.log(`Prêt! Connecté en tant que ${c.user.tag}`);
+  });
+
+  const commands = new Map<string, Command>();
+  commands.set(Ping.data.name, Ping);
+  const slashCommands = [Ping.data.toJSON()];
+
+  const rest = new REST().setToken(token);
+
+  try {
+    console.log(
+      `Début du rafraichissement de ${slashCommands.length} commandes (/).`
+    );
+
+    const data: any[] = (await rest.put(
+      Routes.applicationGuildCommands(clientId, guildId),
+      { body: slashCommands }
+    )) as any[];
+
+    console.log(`Rechargement réussi de ${data.length} commandes (/).`);
+  } catch (error) {
+    console.error(error);
+  }
+
+  client.on(Events.InteractionCreate, async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    const command = commands.get(interaction.commandName);
+
+    if (!commands) {
+      console.error(
+        `Aucune commande correspondant à ${interaction.commandName} n'a été trouvée.`
+      );
+      return;
+    }
+
+    await command.execute(interaction).catch((err) => {
+      console.error(err);
+    });
+  });
+
+  client.login(token);
 }
 
 main();
