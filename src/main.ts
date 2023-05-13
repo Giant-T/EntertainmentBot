@@ -1,7 +1,7 @@
 import { Client, Events, GatewayIntentBits, REST, Routes } from 'discord.js';
 import * as dotenv from 'dotenv';
-import Ping from './commands/ping';
-import Command from './models/command';
+import Ping from './commands/ping.js';
+import Command from './models/command.js';
 
 async function main(): Promise<void> {
   dotenv.config();

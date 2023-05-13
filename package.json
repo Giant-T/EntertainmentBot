@@ -4,10 +4,10 @@
   "main": "src/main.ts",
   "author": "Giant_T",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "start": "",
+    "start": "tsc --build && node build/main.js",
     "fmt": "yarn prettier --write src/",
-    "dev": "npx nodemon src/main.ts",
     "build": "tsc --build",
     "clean": "tsc --build --clean",
     "prepare": "husky install"
@@ -21,7 +21,6 @@
     "eslint-config-prettier": "^8.8.0",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.2",
-    "nodemon": "^2.0.22",
     "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"

@@ -1,9 +1,13 @@
   {
+    "strict": true,
     "compilerOptions": {
       "noImplicitAny": false,
       "noEmitOnError": true,
       "removeComments": true,
-      "outDir": "build"
+      "outDir": "build",
+      "moduleResolution": "NodeNext",
+      "target": "ESNext",
+      "module": "NodeNext"
     },
     "include": [
       "src/**/*"
