@@ -1,14 +1,26 @@
 {
-  "extends": "eslint:recommended",
+  "extends": [
+    "eslint:recommended",
+    "prettier"
+  ],
   "env": {
     "node": true,
     "es6": true
   },
-  "parserOptions": 8,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 8
+  },
   "rules": {
-    "quotes": ["error", "single"],
+    "quotes": [
+      "error",
+      "single"
+    ],
+    "eqeqeq": "warn",
     "prefer-const": "error",
     "no-lonely-if": "error",
-    "no-var": "error"
+    "no-var": "error",
+    "semi": "error"
   }
 }
