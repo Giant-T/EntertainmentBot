@@ -6,14 +6,14 @@
   "license": "MIT",
   "scripts": {
     "start": "",
-    "fmt": "yarn prettier --write src/main.ts",
+    "fmt": "yarn prettier --write src/",
     "dev": "npx nodemon src/main.ts",
     "build": "tsc --build",
     "clean": "tsc --build --clean",
     "prepare": "husky install"
   },
   "lint-staged": {
-    "src/**/*": "prettier --write --ignore-unknown"
+    "src/**/*": "prettier --write src/ --ignore-unknown"
   },
   "devDependencies": {
     "@types/node": "^20.1.3",
