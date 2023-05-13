@@ -1,6 +1,13 @@
-import { Client, Events, GatewayIntentBits, REST, Routes } from 'discord.js';
+import {
+  Client,
+  Events,
+  GatewayIntentBits,
+  REST,
+  RESTPostAPIChatInputApplicationCommandsJSONBody,
+  Routes,
+} from 'discord.js';
 import * as dotenv from 'dotenv';
-import Ping from './commands/ping.js';
+import Commands from './commands/index.js';
 import Command from './models/command.js';
 
 async function main(): Promise<void> {
@@ -18,8 +25,13 @@ async function main(): Promise<void> {
   });
 
   const commands = new Map<string, Command>();
-  commands.set(Ping.data.name, Ping);
-  const slashCommands = [Ping.data.toJSON()];
+  const slashCommands: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
+
+  for (const field in Commands) {
+    const command: Command = Commands[field] as Command;
+    commands.set(command.data.name, command);
+    slashCommands.push(command.data.toJSON());
+  }
 
   const rest = new REST().setToken(token);
 

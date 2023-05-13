@@ -4,7 +4,7 @@ import Command from '../models/command.js';
 const Ping: Command = {
   data: new SlashCommandBuilder()
     .setName('ping')
-    .setDescription('Réponds avec Pong!'),
+    .setDescription('Répond avec Pong!'),
   async execute(interaction: CommandInteraction) {
     await interaction.reply('Pong!');
   },
