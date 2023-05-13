@@ -1,4 +1,9 @@
-import { CommandInteraction, SlashCommandBuilder } from 'discord.js';
+import {
+  Colors,
+  CommandInteraction,
+  EmbedBuilder,
+  SlashCommandBuilder,
+} from 'discord.js';
 import Command from '../models/command.js';
 
 const Ping: Command = {
@@ -6,7 +11,18 @@ const Ping: Command = {
     .setName('ping')
     .setDescription('Répond avec Pong!'),
   async execute(interaction: CommandInteraction) {
-    await interaction.reply('Pong!');
+    const millis = new Date().getTime() - interaction.createdTimestamp;
+
+    const embed = new EmbedBuilder()
+      .setColor(Colors.DarkAqua)
+      .setTitle('Pong!')
+      .setDescription(`${millis} ms`);
+
+    const message = await interaction.reply({
+      embeds: [embed],
+      fetchReply: true,
+    });
+    message.react('🏓');
   },
 };
 
