@@ -10,6 +10,7 @@ import {
 import Command from '../models/command.js';
 import Movie, { randomMovie } from '../models/movie.js';
 
+// Commande qui retourne un mockup de la liste des filmes à l'utilisateur
 const Testbuttons: Command = {
   data: new SlashCommandBuilder()
     .setName('testbuttons')
@@ -40,6 +41,7 @@ const Testbuttons: Command = {
       .setTitle('Liste des filmes')
       .setColor(Colors.DarkAqua);
 
+    // Ajoute les filmes au message
     movies.forEach((movie, index) => {
       embed.addFields({
         name: `${index + 1} - ${movie.title}`,
@@ -53,6 +55,7 @@ const Testbuttons: Command = {
       fetchReply: true,
     });
 
+    // Ajoute les réactions 1, 2, 3... sous le message
     message
       .react('1️⃣')
       .then(() => message.react('2️⃣'))

@@ -9,15 +9,11 @@ import {
 import * as dotenv from 'dotenv';
 import Commands from './commands/index.js';
 import Command from './models/command.js';
-import { warn } from 'console';
 
 async function main(): Promise<void> {
   dotenv.config();
-  console.log('Démarrage en cours...');
 
-  const token = process.env.TOKEN;
-  const clientId = process.env.CLIENT_ID;
-  const guildId = process.env.GUILD_ID;
+  const { TOKEN, CLIENT_ID, GUILD_ID } = process.env;
 
   const client = new Client({
     intents: [
@@ -28,19 +24,21 @@ async function main(): Promise<void> {
   });
 
   client.once(Events.ClientReady, (c) => {
-    console.log(`Prêt! Connecté en tant que ${c.user.tag}`);
+    console.log(`Prêt! 🟢 Connecté en tant que ${c.user.tag} 🤖`);
   });
 
   const commands = new Map<string, Command>();
   const slashCommands: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
 
+  // Ajoute toutes les commandes contenues
+  // dans le dossier commands à la liste de commandes
   for (const field in Commands) {
     const command: Command = Commands[field] as Command;
     commands.set(command.data.name, command);
     slashCommands.push(command.data.toJSON());
   }
 
-  const rest = new REST().setToken(token);
+  const rest = new REST().setToken(TOKEN);
 
   try {
     console.log(
@@ -48,7 +46,7 @@ async function main(): Promise<void> {
     );
 
     const data: any[] = (await rest.put(
-      Routes.applicationGuildCommands(clientId, guildId),
+      Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
       { body: slashCommands }
     )) as any[];
 
@@ -62,11 +60,14 @@ async function main(): Promise<void> {
     console.log(JSON.stringify((await message.fetch()).content));
   });
 
+  // Est lancé lorsqu'un utilisateur lance une commande
   client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
+    // Recherche de la commande selon son nom dans la liste.
     const command = commands.get(interaction.commandName);
 
+    // Envoie une erreur si la commande n'existe pas.
     if (!commands) {
       console.error(
         `Aucune commande correspondant à ${interaction.commandName} n'a été trouvée.`
@@ -74,12 +75,13 @@ async function main(): Promise<void> {
       return;
     }
 
+    // Execute la commande
     await command.execute(interaction).catch((err) => {
       console.error(err);
     });
   });
 
-  client.login(token);
+  client.login(TOKEN);
 }
 
 main();

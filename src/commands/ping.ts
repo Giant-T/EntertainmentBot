@@ -6,6 +6,7 @@ import {
 } from 'discord.js';
 import Command from '../models/command.js';
 
+// Commande qui retourne le temps que la commande a prise
 const Ping: Command = {
   data: new SlashCommandBuilder()
     .setName('ping')
