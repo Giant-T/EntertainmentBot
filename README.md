@@ -19,4 +19,6 @@ Crée une nouvelle commande dans le dossier `src/commands` et ajoute les dépend
 
 ### Comment débuter
 -------------------
-Lancé la commande `yarn` dans le dossier afin d'installé toute les dépendances du projet.
+Lancez la commande `yarn` dans le dossier afin d'installé toute les dépendances du projet.
+Lors de chaque commits, la commande de formatage est lancé afin d'assurer un code qui est uniforme.
+
