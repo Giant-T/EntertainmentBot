@@ -9,6 +9,7 @@ import {
 import * as dotenv from 'dotenv';
 import Commands from './commands/index.js';
 import Command from './models/command.js';
+import { warn } from 'console';
 
 async function main(): Promise<void> {
   dotenv.config();
@@ -18,7 +19,13 @@ async function main(): Promise<void> {
   const clientId = process.env.CLIENT_ID;
   const guildId = process.env.GUILD_ID;
 
-  const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+  const client = new Client({
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.DirectMessages,
+    ],
+  });
 
   client.once(Events.ClientReady, (c) => {
     console.log(`Prêt! Connecté en tant que ${c.user.tag}`);
@@ -49,6 +56,11 @@ async function main(): Promise<void> {
   } catch (error) {
     console.error(error);
   }
+
+  client.on(Events.MessageCreate, async (message) => {
+    // Fonctionnalité seulement en place pour effectuer des tests.
+    console.log(JSON.stringify((await message.fetch()).content));
+  });
 
   client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) return;

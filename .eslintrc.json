@@ -20,7 +20,6 @@
     "eqeqeq": "warn",
     "prefer-const": "error",
     "no-lonely-if": "error",
-    "no-var": "error",
-    "semi": "error"
+    "no-var": "error"
   }
 }
