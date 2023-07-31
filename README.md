@@ -1,4 +1,4 @@
-# MovieBot
+# Entertainment Bot
 Un bot discord implémenté en Typescript à l'aide de la librairie [Discord.js](https://discord.js.org/).
 
 ### Commandes
