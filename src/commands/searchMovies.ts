@@ -16,10 +16,10 @@ import Movie from '../models/movie.js';
 // Commande qui retourne un mockup de la liste des films à l'utilisateur
 const SearchMovies: Command = {
   data: new SlashCommandBuilder()
-    .setName('searchmovies')
+    .setName('recherchefilm')
     .addStringOption((options) =>
       options
-        .setName('query')
+        .setName('requete')
         .setDescription('Requête de recherche')
         .setRequired(true)
     )
@@ -95,7 +95,7 @@ const SearchMovies: Command = {
         name: `${index + 1} - ${movie.title}`,
         value:
           movie.overview.length > 1024
-            ? movie.overview.slice(0, 1023) + '&hellip;'
+            ? movie.overview.slice(0, 1021) + '...'
             : movie.overview,
       });
     });

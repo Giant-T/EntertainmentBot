@@ -63,7 +63,7 @@ async function main(): Promise<void> {
     const command = commands.get(interaction.commandName);
 
     // Envoie une erreur si la commande n'existe pas.
-    if (!commands) {
+    if (!command) {
       console.error(
         `Aucune commande correspondant à ${interaction.commandName} n'a été trouvée.`
       );
