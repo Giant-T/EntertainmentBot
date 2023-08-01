@@ -19,7 +19,11 @@ export default class Movie {
     return `https://image.tmdb.org/t/p/original/${this.poster_path}`;
   }
 
-  public get clamped_overview(): string {
+  public get formatted_overview(): string {
+    if (this.overview === '') {
+      return 'Aucune description.';
+    }
+
     return this.overview.length > 1024
       ? this.overview.slice(0, 1021) + '...'
       : this.overview;

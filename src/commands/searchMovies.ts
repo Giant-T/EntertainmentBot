@@ -62,8 +62,9 @@ const SearchMovies: Command = {
     });
 
     const addButtonListener = () => {
-      const filter = (click: ButtonInteraction<'cached'>): boolean =>
-        click.user.id === interaction.user.id;
+      const filter = (click: ButtonInteraction<'cached'>): boolean => {
+        return click.user.id === interaction.user.id;
+      };
 
       const collector = message.channel.createMessageComponentCollector({
         filter,
@@ -72,7 +73,8 @@ const SearchMovies: Command = {
 
       collector.on(
         'collect',
-        (buttonInteraction: ButtonInteraction<'cached'>) => {
+        async (buttonInteraction: ButtonInteraction<'cached'>) => {
+          await buttonInteraction.deferUpdate();
           if (!isNaN(+buttonInteraction.customId)) {
             const index: number = +buttonInteraction.customId;
             sendDetailedMovieEmbed(interaction, results[index + offset]);
@@ -114,7 +116,7 @@ function addFields(embed: EmbedBuilder, movies: Movie[], offset: number) {
   movies.slice(offset, offset + PAGE_SIZE).forEach((movie, index) => {
     embed.addFields({
       name: `${index + 1} - ${movie.title}`,
-      value: movie.clamped_overview,
+      value: movie.formatted_overview,
     });
   });
   embed.addFields({
