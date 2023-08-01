@@ -1,13 +1,12 @@
 import {
   ActionRowBuilder,
   ButtonBuilder,
+  ButtonInteraction,
   ButtonStyle,
   Colors,
   CommandInteraction,
   EmbedBuilder,
-  MessageReaction,
   SlashCommandBuilder,
-  User,
 } from 'discord.js';
 import Command from '../models/command.js';
 import axios from 'axios';
@@ -24,23 +23,14 @@ const SearchMovies: Command = {
         .setDescription('Requête de recherche')
         .setRequired(true)
     )
-    .addStringOption((options) =>
-      options
-        .setName('language')
-        .setDescription('Langage des informations')
-        .addChoices(
-          { name: 'Français', value: 'fr-CAN' },
-          { name: 'English', value: 'en-CAN' }
-        )
-    )
     .setDescription('Recherche de film'),
   async execute(interaction: CommandInteraction) {
+    const message = await interaction.deferReply({ fetchReply: true });
+
     const query = interaction.options.get('query').value;
-    const language =
-      interaction.options.get('language', false)?.value ?? 'fr-CAN';
     const { MOVIE_TOKEN } = process.env;
 
-    const buttons: ButtonBuilder[] = [
+    const arrows: ButtonBuilder[] = [
       new ButtonBuilder()
         .setCustomId('left')
         .setStyle(ButtonStyle.Secondary)
@@ -51,12 +41,14 @@ const SearchMovies: Command = {
         .setEmoji('▶️'),
     ];
 
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(...buttons);
+    const arrowsRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      ...arrows
+    );
 
     const { results } = new MovieSearchResult(
       (
         await axios.get(
-          `https://api.themoviedb.org/3/search/movie?query=${query}&language${language}`,
+          `https://api.themoviedb.org/3/search/movie?query=${query}&language=fr-CAN`,
           {
             headers: {
               Authorization: `Bearer ${MOVIE_TOKEN}`,
@@ -64,6 +56,33 @@ const SearchMovies: Command = {
           }
         )
       ).data
+    );
+
+    const numbers: ButtonBuilder[] = [
+      new ButtonBuilder()
+        .setCustomId('0')
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('1️⃣'),
+      new ButtonBuilder()
+        .setCustomId('1')
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('2️⃣'),
+      new ButtonBuilder()
+        .setCustomId('2')
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('3️⃣'),
+      new ButtonBuilder()
+        .setCustomId('3')
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('4️⃣'),
+      new ButtonBuilder()
+        .setCustomId('4')
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('5️⃣'),
+    ];
+
+    const numbersRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      ...numbers
     );
 
     const embed = new EmbedBuilder()
@@ -81,49 +100,47 @@ const SearchMovies: Command = {
       });
     });
 
-    const message = await interaction.reply({
+    await interaction.editReply({
       embeds: [embed],
-      components: [row],
-      fetchReply: true,
+      components: [numbersRow, arrowsRow],
     });
 
-    // Ajoute les réactions 1, 2, 3... sous le message
-    const emojiNumbers: string[] = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
-    message
-      .react(emojiNumbers[0])
-      .then(() => message.react(emojiNumbers[1]))
-      .then(() => message.react(emojiNumbers[2]))
-      .then(() => message.react(emojiNumbers[3]))
-      .then(() => message.react(emojiNumbers[4]));
+    const filter = (click: ButtonInteraction<'cached'>): boolean =>
+      click.user.id === interaction.user.id;
 
-    const filter = (_reaction: MessageReaction, user: User): boolean => {
-      return (
-        emojiNumbers.includes(_reaction.emoji.name) &&
-        user.id === interaction.user.id
-      );
-    };
-
-    message.awaitReactions({ filter, max: 1 }).then((collected) => {
-      const reaction = collected.first();
-
-      const detailedEmbed = generateDetailedMovieEmbed(
-        results[emojiNumbers.indexOf(reaction.emoji.name)]
-      );
-
-      message.reply({
-        embeds: [detailedEmbed],
-      });
+    const collector = message.channel.createMessageComponentCollector({
+      filter,
+      max: 1,
     });
+
+    collector.on(
+      'collect',
+      (buttonInteraction: ButtonInteraction<'cached'>) => {
+        if (!isNaN(+buttonInteraction.customId)) {
+          const index: number = +buttonInteraction.customId;
+          sendDetailedMovieEmbed(buttonInteraction, results[index]);
+        }
+      }
+    );
   },
 };
 
-function generateDetailedMovieEmbed(movie: Movie): EmbedBuilder {
+function sendDetailedMovieEmbed(
+  interaction: ButtonInteraction<'cached'>,
+  movie: Movie
+) {
   const embed = new EmbedBuilder()
     .setTitle(movie.title)
     .setThumbnail(movie.full_poster_path)
-    .setDescription(movie.overview);
+    .setDescription(movie.overview)
+    .setFields({
+      name: 'Date de sortie',
+      value: movie.release_date.toLocaleDateString('fr-CA'),
+    });
 
-  return embed;
+  interaction.reply({
+    embeds: [embed],
+  });
 }
 
 export default SearchMovies;

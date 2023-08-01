@@ -10,7 +10,7 @@ export default class Movie {
     this.id = movie.id;
     this.title = movie.title;
     this.overview = movie.overview;
-    this.release_date = movie.release_date;
+    this.release_date = new Date(movie.release_date);
     this.vote_average = movie.vote_average;
     this.poster_path = movie.poster_path;
   }
