@@ -67,7 +67,7 @@ const SearchMovies: Command = {
     );
 
     const embed = new EmbedBuilder()
-      .setTitle('Liste des films')
+      .setTitle(`Recherche de films '${query}'`)
       .setColor(Colors.DarkAqua);
 
     // Ajoute les films au message
@@ -120,7 +120,8 @@ const SearchMovies: Command = {
 function generateDetailedMovieEmbed(movie: Movie): EmbedBuilder {
   const embed = new EmbedBuilder()
     .setTitle(movie.title)
-    .setImage(movie.full_poster_path);
+    .setThumbnail(movie.full_poster_path)
+    .setDescription(movie.overview);
 
   return embed;
 }
