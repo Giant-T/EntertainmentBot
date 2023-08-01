@@ -18,4 +18,10 @@ export default class Movie {
   public get full_poster_path(): string {
     return `https://image.tmdb.org/t/p/original/${this.poster_path}`;
   }
+
+  public get clamped_overview(): string {
+    return this.overview.length > 1024
+      ? this.overview.slice(0, 1021) + '...'
+      : this.overview;
+  }
 }
