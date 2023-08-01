@@ -1,17 +1,21 @@
-import { faker } from '@faker-js/faker';
-
-export default interface Movie {
+export default class Movie {
+  id: number;
   title: string;
   overview: string;
   release_date: Date;
   vote_average: number;
-}
+  poster_path: string;
 
-export function randomMovie(): Movie {
-  return {
-    title: faker.word.words({ count: { min: 1, max: 6 } }),
-    overview: faker.lorem.paragraph(),
-    release_date: faker.date.past(),
-    vote_average: faker.number.float({ min: 70, max: 100 }),
-  };
+  constructor(movie: any) {
+    this.id = movie.id;
+    this.title = movie.title;
+    this.overview = movie.overview;
+    this.release_date = movie.release_date;
+    this.vote_average = movie.vote_average;
+    this.poster_path = movie.poster_path;
+  }
+
+  public get full_poster_path(): string {
+    return `https://image.tmdb.org/t/p/original/${this.poster_path}`;
+  }
 }

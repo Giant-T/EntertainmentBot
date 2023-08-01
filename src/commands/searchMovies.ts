@@ -12,6 +12,7 @@ import {
 import Command from '../models/command.js';
 import axios from 'axios';
 import MovieSearchResult from '../models/movieSearchResult.js';
+import Movie from '../models/movie.js';
 
 // Commande qui retourne un mockup de la liste des films à l'utilisateur
 const SearchMovies: Command = {
@@ -52,16 +53,18 @@ const SearchMovies: Command = {
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(...buttons);
 
-    const { results } = (
-      await axios.get<MovieSearchResult>(
-        `https://api.themoviedb.org/3/search/movie?query=${query}&language${language}`,
-        {
-          headers: {
-            Authorization: `Bearer ${MOVIE_TOKEN}`,
-          },
-        }
-      )
-    ).data;
+    const { results } = new MovieSearchResult(
+      (
+        await axios.get(
+          `https://api.themoviedb.org/3/search/movie?query=${query}&language${language}`,
+          {
+            headers: {
+              Authorization: `Bearer ${MOVIE_TOKEN}`,
+            },
+          }
+        )
+      ).data
+    );
 
     const embed = new EmbedBuilder()
       .setTitle('Liste des films')
@@ -85,27 +88,41 @@ const SearchMovies: Command = {
     });
 
     // Ajoute les réactions 1, 2, 3... sous le message
+    const emojiNumbers: string[] = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
     message
-      .react('1️⃣')
-      .then(() => message.react('2️⃣'))
-      .then(() => message.react('3️⃣'))
-      .then(() => message.react('4️⃣'))
-      .then(() => message.react('5️⃣'));
+      .react(emojiNumbers[0])
+      .then(() => message.react(emojiNumbers[1]))
+      .then(() => message.react(emojiNumbers[2]))
+      .then(() => message.react(emojiNumbers[3]))
+      .then(() => message.react(emojiNumbers[4]));
 
-    const collectorFilter = (
-      _reaction: MessageReaction,
-      user: User
-    ): boolean => {
-      return user.id === interaction.user.id;
+    const filter = (_reaction: MessageReaction, user: User): boolean => {
+      return (
+        emojiNumbers.includes(_reaction.emoji.name) &&
+        user.id === interaction.user.id
+      );
     };
 
-    message
-      .awaitReactions({ filter: collectorFilter, time: 60000 })
-      .then((collected) => {
-        const reaction = collected.first();
-        console.log(reaction);
+    message.awaitReactions({ filter, max: 1 }).then((collected) => {
+      const reaction = collected.first();
+
+      const detailedEmbed = generateDetailedMovieEmbed(
+        results[emojiNumbers.indexOf(reaction.emoji.name)]
+      );
+
+      message.reply({
+        embeds: [detailedEmbed],
       });
+    });
   },
 };
+
+function generateDetailedMovieEmbed(movie: Movie): EmbedBuilder {
+  const embed = new EmbedBuilder()
+    .setTitle(movie.title)
+    .setImage(movie.full_poster_path);
+
+  return embed;
+}
 
 export default SearchMovies;
