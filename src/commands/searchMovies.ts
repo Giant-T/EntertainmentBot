@@ -5,7 +5,9 @@ import {
   Colors,
   CommandInteraction,
   EmbedBuilder,
+  MessageReaction,
   SlashCommandBuilder,
+  User,
 } from 'discord.js';
 import Command from '../models/command.js';
 import axios from 'axios';
@@ -35,7 +37,6 @@ const SearchMovies: Command = {
     const query = interaction.options.get('query').value;
     const language =
       interaction.options.get('language', false)?.value ?? 'fr-CAN';
-    console.log(language);
     const { MOVIE_TOKEN } = process.env;
 
     const buttons: ButtonBuilder[] = [
@@ -90,6 +91,20 @@ const SearchMovies: Command = {
       .then(() => message.react('3️⃣'))
       .then(() => message.react('4️⃣'))
       .then(() => message.react('5️⃣'));
+
+    const collectorFilter = (
+      _reaction: MessageReaction,
+      user: User
+    ): boolean => {
+      return user.id === interaction.user.id;
+    };
+
+    message
+      .awaitReactions({ filter: collectorFilter, time: 60000 })
+      .then((collected) => {
+        const reaction = collected.first();
+        console.log(reaction);
+      });
   },
 };
 
