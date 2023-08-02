@@ -1,16 +1,22 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { ObjectId } from 'mongodb';
+import { Column, Entity, ObjectIdColumn, Unique } from 'typeorm';
 
 @Entity({ name: 'consumed' })
+@Unique(['consumed_id', 'user_id', 'type'])
 export default class Consumed {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @ObjectIdColumn()
+  readonly id: ObjectId;
 
   @Column()
   title: string;
+  @Column({ type: 'int' })
+  consumed_id: number;
 
   @Column()
-  user_id: number;
-
+  user_id: string;
   @Column()
   user_name: string;
+
+  @Column()
+  type: 'movie' | 'game';
 }

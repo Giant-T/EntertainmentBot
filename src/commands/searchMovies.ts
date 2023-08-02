@@ -6,6 +6,7 @@ import {
   Colors,
   CommandInteraction,
   EmbedBuilder,
+  Message,
   SlashCommandBuilder,
 } from 'discord.js';
 import Command from '../models/command.js';
@@ -13,6 +14,8 @@ import MovieSearchResult from '../models/movieSearchResult.js';
 import Movie from '../models/movie.js';
 import DetailedMovie from '../models/detailedMovie.js';
 import MovieRequester from '../utils/movieRequester.js';
+import BotDataSource from '../dataSource.js';
+import Consumed from '../entities/consumed.js';
 
 type Direction = 'right' | 'left';
 
@@ -206,9 +209,64 @@ async function sendDetailedMovieEmbed(
     })
     .setFooter({ text: movie.formatted_genres });
 
-  interaction.followUp({
+  const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('markAsSeen')
+      .setEmoji('👁️')
+      .setStyle(ButtonStyle.Primary)
+  );
+
+  const message = await interaction.followUp({
     embeds: [embed],
+    components: [actionRow],
+    fetchReply: true,
   });
+
+  addDetailedButtonInteractions(interaction, message, movie);
+}
+
+function addDetailedButtonInteractions(
+  interaction: CommandInteraction,
+  message: Message<boolean>,
+  movie: DetailedMovie
+) {
+  const filter = (click: ButtonInteraction<'cached'>): boolean => {
+    return (
+      click.user.id === interaction.user.id && click.customId === 'markAsSeen'
+    );
+  };
+
+  const collector = message.channel.createMessageComponentCollector({
+    filter,
+    max: 1,
+  });
+
+  collector.on(
+    'collect',
+    async (buttonInteraction: ButtonInteraction<'cached'>) => {
+      await buttonInteraction.deferUpdate();
+
+      const newConsumed = new Consumed();
+      newConsumed.title = movie.title;
+      newConsumed.consumed_id = movie.id;
+      newConsumed.type = 'movie';
+      newConsumed.user_id = interaction.user.id;
+      newConsumed.user_name = interaction.user.username;
+
+      if (
+        (await BotDataSource.manager.getMongoRepository(Consumed).findOne({
+          where: {
+            consumed_id: movie.id,
+            type: 'movie',
+            user_id: interaction.user.id,
+          },
+        })) === null
+      )
+        await BotDataSource.manager
+          .getMongoRepository(Consumed)
+          .insertOne(newConsumed);
+    }
+  );
 }
 
 export default SearchMovies;
