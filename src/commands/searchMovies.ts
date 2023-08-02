@@ -98,7 +98,7 @@ const SearchMovies: Command = {
       offset = Math.min(results.length, Math.max(0, offset));
       const embed = generateSearchEmbed(results, query, offset);
 
-      buttonInteraction.update({
+      buttonInteraction.editReply({
         embeds: [embed],
         components: [
           generateNumbersRow(results, offset),
