@@ -9,9 +9,10 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import Command from '../models/command.js';
-import axios from 'axios';
 import MovieSearchResult from '../models/movieSearchResult.js';
 import Movie from '../models/movie.js';
+import DetailedMovie from '../models/detailedMovie.js';
+import MovieRequester from '../utils/movieRequester.js';
 
 type Direction = 'right' | 'left';
 
@@ -34,18 +35,10 @@ const SearchMovies: Command = {
     });
 
     const query = interaction.options.get('requete').value.toString();
-    const { MOVIE_TOKEN } = process.env;
 
     const { results } = new MovieSearchResult(
       (
-        await axios.get(
-          `https://api.themoviedb.org/3/search/movie?query=${query}&language=fr-CAN`,
-          {
-            headers: {
-              Authorization: `Bearer ${MOVIE_TOKEN}`,
-            },
-          }
-        )
+        await MovieRequester.get(`search/movie?query=${query}&language=fr-CAN`)
       ).data
     );
 
@@ -77,7 +70,7 @@ const SearchMovies: Command = {
           await buttonInteraction.deferUpdate();
           if (!isNaN(+buttonInteraction.customId)) {
             const index: number = +buttonInteraction.customId;
-            sendDetailedMovieEmbed(interaction, results[index + offset]);
+            sendDetailedMovieEmbed(interaction, results[index + offset].id);
             return;
           }
           changeOffset(
@@ -132,7 +125,7 @@ function generateSearchEmbed(
 ): EmbedBuilder {
   const embed = new EmbedBuilder()
     .setTitle(`Recherche de films '${query}'`)
-    .setColor(Colors.DarkAqua);
+    .setColor(Colors.DarkBlue);
 
   addFields(embed, movies, offset);
 
@@ -194,15 +187,24 @@ function generateArrowsRow(
   return new ActionRowBuilder<ButtonBuilder>().addComponents(...arrows);
 }
 
-function sendDetailedMovieEmbed(interaction: CommandInteraction, movie: Movie) {
+async function sendDetailedMovieEmbed(
+  interaction: CommandInteraction,
+  movieId: number
+) {
+  const movie = new DetailedMovie(
+    (await MovieRequester.get(`movie/${movieId}?language=fr-CAN`)).data
+  );
+
   const embed = new EmbedBuilder()
     .setTitle(movie.title)
+    .setColor(Colors.DarkAqua)
     .setThumbnail(movie.full_poster_path)
     .setDescription(movie.overview)
     .setFields({
       name: 'Date de sortie',
       value: movie.release_date.toLocaleDateString('fr-CA'),
-    });
+    })
+    .setFooter({ text: movie.genres.map((x) => x.name).join(', ') });
 
   interaction.followUp({
     embeds: [embed],
