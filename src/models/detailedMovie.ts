@@ -8,6 +8,10 @@ export default class DetailedMovie extends Movie {
 
     this.genres = movie.genres;
   }
+
+  public get formatted_genres() {
+    return this.genres.map((x) => x.name).join(', ');
+  }
 }
 
 interface MovieGenre {

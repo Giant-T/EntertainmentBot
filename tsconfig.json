@@ -1,16 +1,14 @@
-  {
-    "strict": true,
-    "compilerOptions": {
-      "noImplicitAny": false,
-      "noEmitOnError": true,
-      "removeComments": true,
-      "outDir": "build",
-      "moduleResolution": "NodeNext",
-      "target": "ESNext",
-      "module": "NodeNext",
+{
+   "compilerOptions": {
+      "lib": [
+         "es5",
+         "es6"
+      ],
+      "target": "es2020",
+      "moduleResolution": "node",
+      "outDir": "./build",
+      "emitDecoratorMetadata": true,
+      "experimentalDecorators": true,
       "sourceMap": true
-    },
-    "include": [
-      "src/**/*"
-    ]
-  }
+   }
+}

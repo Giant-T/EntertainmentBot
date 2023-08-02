@@ -114,7 +114,7 @@ function addFields(embed: EmbedBuilder, movies: Movie[], offset: number) {
   });
   embed.addFields({
     name: 'Résultats',
-    value: `${Math.min(offset + 5, movies.length)}/${movies.length}`,
+    value: `${Math.min(offset + PAGE_SIZE, movies.length)}/${movies.length}`,
   });
 }
 
@@ -204,7 +204,7 @@ async function sendDetailedMovieEmbed(
       name: 'Date de sortie',
       value: movie.release_date.toLocaleDateString('fr-CA'),
     })
-    .setFooter({ text: movie.genres.map((x) => x.name).join(', ') });
+    .setFooter({ text: movie.formatted_genres });
 
   interaction.followUp({
     embeds: [embed],
