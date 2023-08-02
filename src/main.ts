@@ -13,6 +13,7 @@ import Command from './models/command.js';
 import BotDataSource from './dataSource.js';
 
 async function main(): Promise<void> {
+  process.title = 'discordbot';
   dotenv.config();
 
   const { DISCORD_TOKEN, CLIENT_ID } = process.env;

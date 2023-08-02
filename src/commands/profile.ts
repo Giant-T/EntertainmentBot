@@ -1,4 +1,7 @@
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   Colors,
   CommandInteraction,
   EmbedBuilder,
@@ -32,7 +35,14 @@ const Profile: Command = {
         value: numberOfMoviesSeen.toString(),
       });
 
-    await interaction.editReply({ embeds: [embed] });
+    const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setEmoji('👁️')
+        .setCustomId('seen')
+        .setStyle(ButtonStyle.Primary)
+    );
+
+    await interaction.editReply({ embeds: [embed], components: [actionRow] });
   },
 };
 
