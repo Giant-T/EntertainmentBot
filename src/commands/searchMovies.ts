@@ -64,6 +64,9 @@ const SearchMovies: Command = {
 
       const collector = message.channel.createMessageComponentCollector({
         filter,
+        dispose: true,
+        time: 30000,
+        message: message,
         max: 1,
       });
 
@@ -238,6 +241,9 @@ function addDetailedButtonInteractions(
 
   const collector = message.channel.createMessageComponentCollector({
     filter,
+    dispose: true,
+    message: message,
+    time: 45000,
     max: 1,
   });
 
@@ -252,6 +258,8 @@ function addDetailedButtonInteractions(
       newConsumed.type = 'movie';
       newConsumed.user_id = interaction.user.id;
 
+      let response: string = '';
+
       if (
         (await BotDataSource.manager.getMongoRepository(Consumed).findOne({
           where: {
@@ -265,16 +273,15 @@ function addDetailedButtonInteractions(
           .getMongoRepository(Consumed)
           .insertOne(newConsumed);
 
-        interaction.followUp({
-          content: `Vous avez maintenant visionné ${movie.title}.`,
-          ephemeral: true,
-        });
+        response = `Vous avez maintenant visionné ${movie.title}.`;
       } else {
-        interaction.followUp({
-          content: `Vous avez déjà visionné ${movie.title}.`,
-          ephemeral: true,
-        });
+        response = `Vous avez déjà visionné ${movie.title}.`;
       }
+
+      interaction.followUp({
+        content: response,
+        ephemeral: true,
+      });
     }
   );
 }

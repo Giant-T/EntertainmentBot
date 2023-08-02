@@ -1,8 +1,5 @@
 {
-  "extends": [
-    "eslint:recommended",
-    "prettier"
-  ],
+  "extends": ["eslint:recommended", "prettier"],
   "env": {
     "node": true,
     "es6": true
@@ -13,10 +10,6 @@
     "ecmaVersion": 8
   },
   "rules": {
-    "quotes": [
-      "error",
-      "single"
-    ],
     "eqeqeq": "warn",
     "prefer-const": "error",
     "no-lonely-if": "error",
