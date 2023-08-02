@@ -22,3 +22,20 @@ Crée une nouvelle commande dans le dossier `src/commands` et ajoute les dépend
 Lancez la commande `yarn` dans le dossier afin d'installé toute les dépendances du projet.
 Lors de chaque commits, la commande de formatage est lancé afin d'assurer un code qui est uniforme.
 
+#### Fichier .env
+```sh
+# DISCORD
+DISCORD_TOKEN='...'
+CLIENT_ID='...'
+
+# MOVIE
+MOVIE_TOKEN='...'
+
+# DATABASE
+HOST='localhost'
+PORT=27017
+DATABASE='...'
+DB_USERNAME='...'
+DB_PASSWORD='...'
+```
+
