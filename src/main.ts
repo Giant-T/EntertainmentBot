@@ -10,6 +10,8 @@ import * as dotenv from 'dotenv';
 import Commands from './commands/index.js';
 import Command from './models/command.js';
 
+import BotDataSource from './dataSource.js';
+
 async function main(): Promise<void> {
   dotenv.config();
 
@@ -79,4 +81,6 @@ async function main(): Promise<void> {
   client.login(DISCORD_TOKEN);
 }
 
-main();
+BotDataSource.initialize().then(async () => {
+  main();
+});

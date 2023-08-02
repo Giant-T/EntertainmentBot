@@ -1,4 +1,6 @@
-build/
+.idea/
+.vscode/
 node_modules/
-.env
-yarn-error.log
+build/
+tmp/
+temp/
