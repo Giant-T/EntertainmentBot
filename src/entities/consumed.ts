@@ -14,8 +14,6 @@ export default class Consumed {
 
   @Column()
   user_id: string;
-  @Column()
-  user_name: string;
 
   @Column()
   type: 'movie' | 'game';

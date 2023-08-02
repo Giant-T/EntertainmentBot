@@ -251,7 +251,6 @@ function addDetailedButtonInteractions(
       newConsumed.consumed_id = movie.id;
       newConsumed.type = 'movie';
       newConsumed.user_id = interaction.user.id;
-      newConsumed.user_name = interaction.user.username;
 
       if (
         (await BotDataSource.manager.getMongoRepository(Consumed).findOne({
@@ -261,10 +260,21 @@ function addDetailedButtonInteractions(
             user_id: interaction.user.id,
           },
         })) === null
-      )
+      ) {
         await BotDataSource.manager
           .getMongoRepository(Consumed)
           .insertOne(newConsumed);
+
+        interaction.followUp({
+          content: `Vous avez maintenant visionné ${movie.title}.`,
+          ephemeral: true,
+        });
+      } else {
+        interaction.followUp({
+          content: `Vous avez déjà visionné ${movie.title}.`,
+          ephemeral: true,
+        });
+      }
     }
   );
 }
