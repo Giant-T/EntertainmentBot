@@ -4,15 +4,17 @@ import {
   ButtonInteraction,
   ButtonStyle,
   Colors,
-  CommandInteraction,
   EmbedBuilder,
   Message,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
 } from 'discord.js';
 import DetailedMovie from '../models/detailedMovie.js';
 import MovieRequester from '../utils/movieRequester.js';
 import Consumed from '../entities/consumed.js';
 import BotDataSource from '../dataSource.js';
 import UserInteraction from '../types/UserInteraction.js';
+import Movie from '../models/movie.js';
 
 async function sendDetailedMovieEmbed(
   interaction: UserInteraction,
@@ -37,7 +39,11 @@ async function sendDetailedMovieEmbed(
     new ButtonBuilder()
       .setCustomId('markAsSeen')
       .setEmoji('👁️')
-      .setStyle(ButtonStyle.Primary)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId('rate')
+      .setEmoji('⭐')
+      .setStyle(ButtonStyle.Success)
   );
 
   const message = await interaction.followUp({
@@ -55,9 +61,7 @@ function addDetailedButtonInteractions(
   movie: DetailedMovie
 ) {
   const filter = (click: ButtonInteraction): boolean => {
-    return (
-      click.user.id === interaction.user.id && click.customId === 'markAsSeen'
-    );
+    return click.user.id === interaction.user.id;
   };
 
   const collector = message.createMessageComponentCollector({
@@ -69,37 +73,64 @@ function addDetailedButtonInteractions(
   collector.on('collect', async (buttonInteraction: ButtonInteraction) => {
     await buttonInteraction.deferUpdate();
 
-    const newConsumed = new Consumed();
-    newConsumed.title = movie.title;
-    newConsumed.consumed_id = movie.id;
-    newConsumed.type = 'movie';
-    newConsumed.user_id = interaction.user.id;
+    if (buttonInteraction.customId === 'markAsSeen') {
+      interaction.followUp({
+        content: await markMovieAsSeen(interaction, movie),
+        ephemeral: true,
+      });
+    } else if (buttonInteraction.customId === 'rate') {
+      const ratingSelect = new StringSelectMenuBuilder()
+        .setCustomId('rating')
+        .setPlaceholder('Choisissez une note...')
+        .addOptions(
+          new StringSelectMenuOptionBuilder().setLabel('1').setValue('1'),
+          new StringSelectMenuOptionBuilder().setLabel('2').setValue('2'),
+          new StringSelectMenuOptionBuilder().setLabel('3').setValue('3'),
+          new StringSelectMenuOptionBuilder().setLabel('4').setValue('4'),
+          new StringSelectMenuOptionBuilder().setLabel('5').setValue('5')
+        );
 
-    let response: string = '';
+      const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+        ratingSelect
+      );
 
-    if (
-      (await BotDataSource.manager.getMongoRepository(Consumed).findOne({
-        where: {
-          consumed_id: movie.id,
-          type: 'movie',
-          user_id: interaction.user.id,
-        },
-      })) === null
-    ) {
-      await BotDataSource.manager
-        .getMongoRepository(Consumed)
-        .insertOne(newConsumed);
-
-      response = `Vous avez maintenant visionné ${movie.title}.`;
-    } else {
-      response = `Vous avez déjà visionné ${movie.title}.`;
+      interaction.followUp({
+        content: `Donnez une note à ${movie.title}`,
+        components: [row],
+      });
     }
-
-    interaction.followUp({
-      content: response,
-      ephemeral: true,
-    });
   });
+}
+
+async function markMovieAsSeen(
+  interaction: UserInteraction,
+  movie: Movie
+): Promise<string> {
+  const newConsumed = new Consumed();
+  newConsumed.title = movie.title;
+  newConsumed.consumed_id = movie.id;
+  newConsumed.type = 'movie';
+  newConsumed.user_id = interaction.user.id;
+
+  let response: string = '';
+
+  if (
+    (await BotDataSource.manager.getMongoRepository(Consumed).findOne({
+      where: {
+        consumed_id: movie.id,
+        type: 'movie',
+        user_id: interaction.user.id,
+      },
+    })) === null
+  ) {
+    await BotDataSource.manager.save(newConsumed);
+
+    response = `Vous avez maintenant visionné ${movie.title}.`;
+  } else {
+    response = `Vous avez déjà visionné ${movie.title}.`;
+  }
+
+  return response;
 }
 
 export default sendDetailedMovieEmbed;
