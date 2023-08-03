@@ -10,8 +10,9 @@
     "ecmaVersion": 8
   },
   "rules": {
+    "no-unused-vars": "off",
     "eqeqeq": "warn",
-    "prefer-const": "error",
+    "prefer-const": "warn",
     "no-lonely-if": "error",
     "no-var": "error"
   }

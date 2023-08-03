@@ -2,7 +2,8 @@ import { CommandInteraction, SlashCommandBuilder } from 'discord.js';
 import Command from '../models/command.js';
 import MovieSearchResult from '../models/movieSearchResult.js';
 import MovieRequester from '../utils/movieRequester.js';
-import sendMovieListEmbed from '../embeds/movieListEmbed.js';
+import sendPager from '../embeds/pager.js';
+import sendDetailedMovieEmbed from '../embeds/detailedMovieEmbed.js';
 
 const SearchMovies: Command = {
   data: new SlashCommandBuilder()
@@ -28,11 +29,16 @@ const SearchMovies: Command = {
       ).data
     );
 
-    sendMovieListEmbed(
+    sendPager(
       interaction,
       message,
       results,
-      `Recherche de films '${query}'`
+      `Recherche de films '${query}'`,
+      (value, index) => ({
+        name: `${index + 1} - ${value.title}`,
+        value: value.formatted_overview,
+      }),
+      (interaction, value) => sendDetailedMovieEmbed(interaction, value.id)
     );
   },
 };
