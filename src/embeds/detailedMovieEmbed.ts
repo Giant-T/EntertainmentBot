@@ -12,9 +12,10 @@ import DetailedMovie from '../models/detailedMovie.js';
 import MovieRequester from '../utils/movieRequester.js';
 import Consumed from '../entities/consumed.js';
 import BotDataSource from '../dataSource.js';
+import UserInteraction from '../types/UserInteraction.js';
 
 async function sendDetailedMovieEmbed(
-  interaction: CommandInteraction,
+  interaction: UserInteraction,
   movieId: number
 ) {
   const movie = new DetailedMovie(
@@ -49,7 +50,7 @@ async function sendDetailedMovieEmbed(
 }
 
 function addDetailedButtonInteractions(
-  interaction: CommandInteraction,
+  interaction: UserInteraction,
   message: Message<boolean>,
   movie: DetailedMovie
 ) {
@@ -59,10 +60,9 @@ function addDetailedButtonInteractions(
     );
   };
 
-  const collector = message.channel.createMessageComponentCollector({
+  const collector = message.createMessageComponentCollector({
     filter,
     dispose: true,
-    message: message,
     time: 45000,
     max: 1,
   });

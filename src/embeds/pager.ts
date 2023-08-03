@@ -7,8 +7,10 @@ import {
   Colors,
   CommandInteraction,
   EmbedBuilder,
+  InteractionResponse,
   Message,
 } from 'discord.js';
+import UserInteraction from '../types/UserInteraction';
 
 type Direction = 'right' | 'left';
 const PAGE_SIZE = 5;
@@ -98,12 +100,12 @@ function generatePager<T>(
 }
 
 async function sendPager<T>(
-  interaction: CommandInteraction,
-  message: Message<boolean>,
+  interaction: UserInteraction,
+  message: Message<boolean> | InteractionResponse<boolean>,
   values: T[],
   title: string,
   row: (value: T, index: number) => APIEmbedField,
-  sendDetailedView: (interaction: CommandInteraction, value: T) => void
+  sendDetailedView: (interaction: UserInteraction, value: T) => void
 ) {
   let offset = 0;
   const embed = generatePager(title, values, offset, row);
@@ -121,11 +123,10 @@ async function sendPager<T>(
       return click.user.id === interaction.user.id;
     };
 
-    const collector = message.channel.createMessageComponentCollector({
+    const collector = message.createMessageComponentCollector({
       filter,
       dispose: true,
       time: 30000,
-      message: message,
       max: 1,
     });
 

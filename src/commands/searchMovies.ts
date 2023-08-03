@@ -38,7 +38,8 @@ const SearchMovies: Command = {
         name: `${index + 1} - ${value.title}`,
         value: value.formatted_overview,
       }),
-      (interaction, value) => sendDetailedMovieEmbed(interaction, value.id)
+      (interaction, value) =>
+        sendDetailedMovieEmbed(interaction as CommandInteraction, value.id)
     );
   },
 };
