@@ -1,6 +1,19 @@
 # Entertainment Bot
 Un bot discord implémenté en Typescript à l'aide de la librairie [Discord.js](https://discord.js.org/).
 
+### Commandes du bot
+--------------------
+### `/profil {utilisateur}`
+Affiche le profil d'un utilisateur
+
+### `/recherchefilm {requete}`
+Affiche une liste de film selon la requête
+
+### `/hello`
+Hello, World!
+
+### `/chat`
+
 ### Commandes
 -------------
 Dans le dossier du projet vous pouvez lancer les commandes suivantes:
