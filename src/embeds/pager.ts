@@ -119,7 +119,7 @@ async function sendPager<T>(
   });
 
   const addButtonListener = () => {
-    const filter = (click: ButtonInteraction<'cached'>): boolean => {
+    const filter = (click: ButtonInteraction): boolean => {
       return click.user.id === interaction.user.id;
     };
 
@@ -130,27 +130,21 @@ async function sendPager<T>(
       max: 1,
     });
 
-    collector.on(
-      'collect',
-      async (buttonInteraction: ButtonInteraction<'cached'>) => {
-        await buttonInteraction.deferUpdate();
-        if (!isNaN(+buttonInteraction.customId)) {
-          const index: number = +buttonInteraction.customId;
-          return sendDetailedView(interaction, values[index + offset]);
-        }
-        changeOffset(
-          buttonInteraction.customId as Direction,
-          buttonInteraction
-        );
+    collector.on('collect', async (buttonInteraction: ButtonInteraction) => {
+      await buttonInteraction.deferUpdate();
+      if (!isNaN(+buttonInteraction.customId)) {
+        const index: number = +buttonInteraction.customId;
+        return sendDetailedView(interaction, values[index + offset]);
       }
-    );
+      changeOffset(buttonInteraction.customId as Direction, buttonInteraction);
+    });
   };
 
   addButtonListener();
 
   const changeOffset = (
     direction: Direction,
-    buttonInteraction: ButtonInteraction<'cached'>
+    buttonInteraction: ButtonInteraction
   ) => {
     offset += direction === 'left' ? -PAGE_SIZE : PAGE_SIZE;
     offset = Math.min(values.length, Math.max(0, offset));

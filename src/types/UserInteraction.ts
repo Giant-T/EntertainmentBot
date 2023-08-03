@@ -1,5 +1,5 @@
 import { ButtonInteraction, CommandInteraction } from 'discord.js';
 
-type UserInteraction = CommandInteraction | ButtonInteraction<'cached'>;
+type UserInteraction = CommandInteraction | ButtonInteraction;
 
 export default UserInteraction;

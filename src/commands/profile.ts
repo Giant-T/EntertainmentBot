@@ -47,7 +47,7 @@ const Profile: Command = {
 
     await interaction.editReply({ embeds: [embed], components: [actionRow] });
 
-    const filter = (click: ButtonInteraction<'cached'>) =>
+    const filter = (click: ButtonInteraction) =>
       click.user.id === interaction.user.id;
 
     const collector = message.createMessageComponentCollector({
@@ -57,27 +57,24 @@ const Profile: Command = {
       filter,
     });
 
-    collector.on(
-      'collect',
-      async (buttonInteraction: ButtonInteraction<'cached'>) => {
-        const message = await buttonInteraction.deferReply();
+    collector.on('collect', async (buttonInteraction: ButtonInteraction) => {
+      const message = await buttonInteraction.deferReply();
 
-        if (buttonInteraction.customId === 'seen') {
-          sendPager(
-            buttonInteraction,
-            message,
-            moviesSeen,
-            `Films vus par ${user.username}`,
-            (value, index) => ({
-              name: (index + 1).toString(),
-              value: value.title,
-            }),
-            (interaction, value) =>
-              sendDetailedMovieEmbed(interaction, value.consumed_id)
-          );
-        }
+      if (buttonInteraction.customId === 'seen') {
+        sendPager(
+          buttonInteraction,
+          message,
+          moviesSeen,
+          `Films vus par ${user.username}`,
+          (value, index) => ({
+            name: (index + 1).toString(),
+            value: value.title,
+          }),
+          (interaction, value) =>
+            sendDetailedMovieEmbed(interaction, value.consumed_id)
+        );
       }
-    );
+    });
   },
 };
 

@@ -54,7 +54,7 @@ function addDetailedButtonInteractions(
   message: Message<boolean>,
   movie: DetailedMovie
 ) {
-  const filter = (click: ButtonInteraction<'cached'>): boolean => {
+  const filter = (click: ButtonInteraction): boolean => {
     return (
       click.user.id === interaction.user.id && click.customId === 'markAsSeen'
     );
@@ -64,46 +64,42 @@ function addDetailedButtonInteractions(
     filter,
     dispose: true,
     time: 45000,
-    max: 1,
   });
 
-  collector.on(
-    'collect',
-    async (buttonInteraction: ButtonInteraction<'cached'>) => {
-      await buttonInteraction.deferUpdate();
+  collector.on('collect', async (buttonInteraction: ButtonInteraction) => {
+    await buttonInteraction.deferUpdate();
 
-      const newConsumed = new Consumed();
-      newConsumed.title = movie.title;
-      newConsumed.consumed_id = movie.id;
-      newConsumed.type = 'movie';
-      newConsumed.user_id = interaction.user.id;
+    const newConsumed = new Consumed();
+    newConsumed.title = movie.title;
+    newConsumed.consumed_id = movie.id;
+    newConsumed.type = 'movie';
+    newConsumed.user_id = interaction.user.id;
 
-      let response: string = '';
+    let response: string = '';
 
-      if (
-        (await BotDataSource.manager.getMongoRepository(Consumed).findOne({
-          where: {
-            consumed_id: movie.id,
-            type: 'movie',
-            user_id: interaction.user.id,
-          },
-        })) === null
-      ) {
-        await BotDataSource.manager
-          .getMongoRepository(Consumed)
-          .insertOne(newConsumed);
+    if (
+      (await BotDataSource.manager.getMongoRepository(Consumed).findOne({
+        where: {
+          consumed_id: movie.id,
+          type: 'movie',
+          user_id: interaction.user.id,
+        },
+      })) === null
+    ) {
+      await BotDataSource.manager
+        .getMongoRepository(Consumed)
+        .insertOne(newConsumed);
 
-        response = `Vous avez maintenant visionné ${movie.title}.`;
-      } else {
-        response = `Vous avez déjà visionné ${movie.title}.`;
-      }
-
-      interaction.followUp({
-        content: response,
-        ephemeral: true,
-      });
+      response = `Vous avez maintenant visionné ${movie.title}.`;
+    } else {
+      response = `Vous avez déjà visionné ${movie.title}.`;
     }
-  );
+
+    interaction.followUp({
+      content: response,
+      ephemeral: true,
+    });
+  });
 }
 
 export default sendDetailedMovieEmbed;
