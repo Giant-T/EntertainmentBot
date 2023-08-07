@@ -7,9 +7,12 @@ import {
   Colors,
   EmbedBuilder,
   Message,
+  ModalBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuInteraction,
   StringSelectMenuOptionBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } from 'discord.js';
 import DetailedMovie from '../models/detailedMovie.js';
 import MovieRequester from '../utils/movieRequester.js';
@@ -78,96 +81,35 @@ function addDetailedButtonInteractions(
   });
 
   collector.on('collect', async (buttonInteraction: ButtonInteraction) => {
-    const message = await buttonInteraction.deferReply({
-      ephemeral: true,
-      fetchReply: true,
-    });
-
     if (buttonInteraction.customId === 'markAsSeen') {
+      await buttonInteraction.deferReply({
+        ephemeral: true,
+      });
       buttonInteraction.editReply({
         content: await markMovieAsSeen(interaction, movie),
       });
     } else if (buttonInteraction.customId === 'rate') {
-      if (
-        !(await BotDataSource.manager.getMongoRepository(Consumed).findOne({
-          where: {
-            item_id: movie.id,
-            type: 'movie',
-            user_id: buttonInteraction.user.id,
-          },
-        }))
-      ) {
-        buttonInteraction.editReply({
-          content: 'Vous devez regarder le film avant de faire une évaluation.',
-        });
-        return;
-      }
+      const message = await buttonInteraction.deferReply({
+        ephemeral: true,
+        fetchReply: true,
+      });
+      await rateMovie(buttonInteraction, message, movie);
+    } else if (buttonInteraction.customId === 'review') {
+      const modal = new ModalBuilder()
+        .setTitle(movie.formatted_title)
+        .setCustomId('reviewModal');
 
-      const ratingSelect = new StringSelectMenuBuilder()
-        .setCustomId('rating')
-        .setPlaceholder('Choisissez une note...')
-        .addOptions(
-          new StringSelectMenuOptionBuilder().setLabel('1').setValue('1'),
-          new StringSelectMenuOptionBuilder().setLabel('2').setValue('2'),
-          new StringSelectMenuOptionBuilder().setLabel('3').setValue('3'),
-          new StringSelectMenuOptionBuilder().setLabel('4').setValue('4'),
-          new StringSelectMenuOptionBuilder().setLabel('5').setValue('5')
-        );
-
-      const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-        ratingSelect
+      const actionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(
+        new TextInputBuilder()
+          .setCustomId('reviewText')
+          .setLabel('Critique')
+          .setRequired(true)
+          .setStyle(TextInputStyle.Paragraph)
       );
 
-      await buttonInteraction.editReply({
-        content: `Donnez une note à ${movie.title}`,
-        components: [row],
-      });
+      modal.addComponents(actionRow);
 
-      const filter = (action: AnySelectMenuInteraction) =>
-        action.user.id === interaction.user.id && action.customId === 'rating';
-
-      const collector = message.createMessageComponentCollector({
-        dispose: true,
-        filter,
-        time: 30000,
-        max: 1,
-      });
-
-      collector.on(
-        'collect',
-        async (selectInteraction: StringSelectMenuInteraction) => {
-          await selectInteraction.deferUpdate();
-
-          const rating = +selectInteraction.values[0];
-
-          const review = new Review();
-          review.item_id = movie.id;
-          review.user_id = selectInteraction.user.id;
-          review.genres = movie.genres.map((x) => x.name);
-          review.title = movie.title;
-          review.rating = rating;
-          review.type = 'movie';
-
-          await BotDataSource.manager.getMongoRepository(Review).updateOne(
-            {
-              item_id: review.item_id,
-              user_id: review.user_id,
-              type: review.type,
-            },
-            {
-              $set: {
-                ...review,
-              },
-            },
-            { upsert: true }
-          );
-
-          selectInteraction.editReply({
-            content: `Vous avez donné une note de ${rating} à ${movie.title}.`,
-            components: [],
-          });
-        }
-      );
+      await buttonInteraction.showModal(modal);
     }
   });
 }
@@ -195,6 +137,93 @@ async function markMovieAsSeen(
   response = `Vous avez maintenant visionné ${movie.title}.`;
 
   return response;
+}
+
+async function rateMovie(
+  interaction: UserInteraction,
+  message: Message<boolean>,
+  movie: DetailedMovie
+) {
+  if (
+    !(await BotDataSource.manager.getMongoRepository(Consumed).findOne({
+      where: {
+        item_id: movie.id,
+        type: 'movie',
+        user_id: interaction.user.id,
+      },
+    }))
+  ) {
+    interaction.editReply({
+      content: 'Vous devez regarder le film avant de faire une évaluation.',
+    });
+    return;
+  }
+
+  const ratingSelect = new StringSelectMenuBuilder()
+    .setCustomId('rating')
+    .setPlaceholder('Choisissez une note...')
+    .addOptions(
+      new StringSelectMenuOptionBuilder().setLabel('1').setValue('1'),
+      new StringSelectMenuOptionBuilder().setLabel('2').setValue('2'),
+      new StringSelectMenuOptionBuilder().setLabel('3').setValue('3'),
+      new StringSelectMenuOptionBuilder().setLabel('4').setValue('4'),
+      new StringSelectMenuOptionBuilder().setLabel('5').setValue('5')
+    );
+
+  const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+    ratingSelect
+  );
+
+  await interaction.editReply({
+    content: `Donnez une note à ${movie.title}`,
+    components: [row],
+  });
+
+  const filter = (action: AnySelectMenuInteraction) =>
+    action.user.id === interaction.user.id && action.customId === 'rating';
+
+  const collector = message.createMessageComponentCollector({
+    dispose: true,
+    filter,
+    time: 30000,
+    max: 1,
+  });
+
+  collector.on(
+    'collect',
+    async (selectInteraction: StringSelectMenuInteraction) => {
+      await selectInteraction.deferUpdate();
+
+      const rating = +selectInteraction.values[0];
+
+      const review = new Review();
+      review.item_id = movie.id;
+      review.user_id = selectInteraction.user.id;
+      review.genres = movie.genres.map((x) => x.name);
+      review.title = movie.title;
+      review.rating = rating;
+      review.type = 'movie';
+
+      await BotDataSource.manager.getMongoRepository(Review).updateOne(
+        {
+          item_id: review.item_id,
+          user_id: review.user_id,
+          type: review.type,
+        },
+        {
+          $set: {
+            ...review,
+          },
+        },
+        { upsert: true }
+      );
+
+      selectInteraction.editReply({
+        content: `Vous avez donné une note de ${rating} à ${movie.title}.`,
+        components: [],
+      });
+    }
+  );
 }
 
 export default sendDetailedMovieEmbed;

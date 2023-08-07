@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { Column, Entity, ObjectIdColumn, Unique } from 'typeorm';
+import truncate from '../utils/truncate';
 
 @Entity({ name: 'review' })
 @Unique(['item_id', 'user_id', 'type'])
@@ -24,4 +25,8 @@ export default class Review {
 
   @Column()
   type: 'movie' | 'game';
+
+  public get formatted_review(): string {
+    return truncate(this.review, 1024);
+  }
 }

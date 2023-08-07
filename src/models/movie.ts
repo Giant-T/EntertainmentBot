@@ -1,3 +1,5 @@
+import truncate from '../utils/truncate';
+
 export default class Movie {
   id: number;
   title: string;
@@ -23,13 +25,15 @@ export default class Movie {
     return this._overview.length < 1 ? 'Aucune description.' : this._overview;
   }
 
+  public get formatted_title(): string {
+    return truncate(this.title, 45);
+  }
+
   public get formatted_overview(): string {
     if (this.overview === '') {
       return 'Aucune description.';
     }
 
-    return this.overview.length > 1024
-      ? this.overview.slice(0, 1021) + '...'
-      : this.overview;
+    return truncate(this.overview, 1024);
   }
 }
