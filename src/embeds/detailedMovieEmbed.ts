@@ -46,6 +46,10 @@ async function sendDetailedMovieEmbed(
     new ButtonBuilder()
       .setCustomId('rate')
       .setEmoji('⭐')
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId('review')
+      .setEmoji('📜')
       .setStyle(ButtonStyle.Success)
   );
 
@@ -180,21 +184,15 @@ async function markMovieAsSeen(
 
   let response: string = '';
 
-  if (
-    (await BotDataSource.manager.getMongoRepository(Consumed).findOne({
-      where: {
-        item_id: movie.id,
-        type: 'movie',
-        user_id: interaction.user.id,
-      },
-    })) === null
-  ) {
-    await BotDataSource.manager.save(newConsumed);
+  await BotDataSource.manager
+    .getMongoRepository(Consumed)
+    .replaceOne(
+      { user_id: interaction.user.id, type: 'movie', item_id: movie.id },
+      newConsumed,
+      { upsert: true }
+    );
 
-    response = `Vous avez maintenant visionné ${movie.title}.`;
-  } else {
-    response = `Vous avez déjà visionné ${movie.title}.`;
-  }
+  response = `Vous avez maintenant visionné ${movie.title}.`;
 
   return response;
 }
