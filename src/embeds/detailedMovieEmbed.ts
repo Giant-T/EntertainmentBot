@@ -8,6 +8,7 @@ import {
   EmbedBuilder,
   Message,
   ModalBuilder,
+  ModalSubmitInteraction,
   StringSelectMenuBuilder,
   StringSelectMenuInteraction,
   StringSelectMenuOptionBuilder,
@@ -95,21 +96,7 @@ function addDetailedButtonInteractions(
       });
       await rateMovie(buttonInteraction, message, movie);
     } else if (buttonInteraction.customId === 'review') {
-      const modal = new ModalBuilder()
-        .setTitle(movie.formatted_title)
-        .setCustomId('reviewModal');
-
-      const actionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId('reviewText')
-          .setLabel('Critique')
-          .setRequired(true)
-          .setStyle(TextInputStyle.Paragraph)
-      );
-
-      modal.addComponents(actionRow);
-
-      await buttonInteraction.showModal(modal);
+      await reviewMovie(buttonInteraction, movie);
     }
   });
 }
@@ -126,13 +113,16 @@ async function markMovieAsSeen(
 
   let response: string = '';
 
-  await BotDataSource.manager
-    .getMongoRepository(Consumed)
-    .replaceOne(
-      { user_id: interaction.user.id, type: 'movie', item_id: movie.id },
-      newConsumed,
-      { upsert: true }
-    );
+  await BotDataSource.mongoManager.updateOne(
+    Consumed,
+    { user_id: interaction.user.id, type: 'movie', item_id: movie.id },
+    {
+      $setOnInsert: {
+        ...newConsumed,
+      },
+    },
+    { upsert: true }
+  );
 
   response = `Vous avez maintenant visionné ${movie.title}.`;
 
@@ -145,7 +135,7 @@ async function rateMovie(
   movie: DetailedMovie
 ) {
   if (
-    !(await BotDataSource.manager.getMongoRepository(Consumed).findOne({
+    !(await BotDataSource.mongoManager.findOne(Consumed, {
       where: {
         item_id: movie.id,
         type: 'movie',
@@ -196,23 +186,23 @@ async function rateMovie(
 
       const rating = +selectInteraction.values[0];
 
-      const review = new Review();
-      review.item_id = movie.id;
-      review.user_id = selectInteraction.user.id;
-      review.genres = movie.genres.map((x) => x.name);
-      review.title = movie.title;
-      review.rating = rating;
-      review.type = 'movie';
-
-      await BotDataSource.manager.getMongoRepository(Review).updateOne(
+      await BotDataSource.mongoManager.updateOne(
+        Review,
         {
-          item_id: review.item_id,
-          user_id: review.user_id,
-          type: review.type,
+          item_id: movie.id,
+          user_id: selectInteraction.user.id,
+          type: 'movie',
         },
         {
           $set: {
-            ...review,
+            rating: rating,
+          },
+          $setOnInsert: {
+            user_id: interaction.user.id,
+            type: 'movie',
+            item_id: movie.id,
+            title: movie.title,
+            genres: movie.genres.map((x) => x.name),
           },
         },
         { upsert: true }
@@ -224,6 +214,61 @@ async function rateMovie(
       });
     }
   );
+}
+
+async function reviewMovie(interaction: UserInteraction, movie: DetailedMovie) {
+  const modal = new ModalBuilder()
+    .setTitle(movie.formatted_title)
+    .setCustomId('reviewModal');
+
+  const actionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(
+    new TextInputBuilder()
+      .setCustomId('reviewText')
+      .setLabel('Critique')
+      .setRequired(true)
+      .setStyle(TextInputStyle.Paragraph)
+  );
+
+  modal.addComponents(actionRow);
+
+  await interaction.showModal(modal);
+
+  const filter = (modalInteraction: ModalSubmitInteraction) =>
+    modalInteraction.user.id === interaction.user.id;
+
+  const submitted = await interaction.awaitModalSubmit({
+    dispose: true,
+    time: 480_000, // 8 minutes
+    filter,
+  });
+
+  if (submitted) {
+    submitted.reply(`Vous avez laissé une critique à « ${movie.title} ».`);
+    const reviewText = submitted.fields.getTextInputValue('reviewText');
+
+    await BotDataSource.manager.getMongoRepository(Review).updateOne(
+      {
+        user_id: interaction.user.id,
+        type: 'movie',
+        item_id: movie.id,
+      },
+      {
+        $set: {
+          review: reviewText,
+        },
+        $setOnInsert: {
+          user_id: interaction.user.id,
+          type: 'movie',
+          item_id: movie.id,
+          title: movie.title,
+          genres: movie.genres.map((x) => x.name),
+        },
+      },
+      {
+        upsert: true,
+      }
+    );
+  }
 }
 
 export default sendDetailedMovieEmbed;

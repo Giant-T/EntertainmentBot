@@ -1,4 +1,4 @@
-import truncate from '../utils/truncate';
+import truncate from '../utils/truncate.js';
 
 export default class Movie {
   id: number;

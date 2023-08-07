@@ -1,9 +1,9 @@
 import { ObjectId } from 'mongodb';
 import { Column, Entity, ObjectIdColumn, Unique } from 'typeorm';
-import truncate from '../utils/truncate';
+import truncate from '../utils/truncate.js';
 
 @Entity({ name: 'review' })
-@Unique(['item_id', 'user_id', 'type'])
+@Unique('unique_review', ['item_id', 'user_id', 'type'])
 export default class Review {
   @ObjectIdColumn()
   readonly id: ObjectId;

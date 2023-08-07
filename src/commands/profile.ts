@@ -25,12 +25,10 @@ const Profile: Command = {
     const message = await interaction.deferReply();
     const user = interaction.options.getUser('utilisateur') ?? interaction.user;
 
-    const moviesSeen = await BotDataSource.manager
-      .getMongoRepository(Consumed)
-      .find({
-        where: { user_id: user.id, type: 'movie' },
-        order: { title: 1 },
-      });
+    const moviesSeen = await BotDataSource.mongoManager.find(Consumed, {
+      where: { user_id: user.id, type: 'movie' },
+      order: { title: 1 },
+    });
 
     const embed = new EmbedBuilder()
       .setTitle(`Profil de ${user.username}`)
