@@ -2,6 +2,7 @@ import { DataSource } from 'typeorm';
 import Consumed from './entities/consumed.js';
 import 'reflect-metadata';
 import * as dotenv from 'dotenv';
+import Review from './entities/review.js';
 
 dotenv.config();
 
@@ -15,7 +16,7 @@ const BotDataSource = new DataSource({
   password: DB_PASSWORD,
   database: DATABASE,
   synchronize: true,
-  entities: [Consumed],
+  entities: [Consumed, Review],
 });
 
 export default BotDataSource;

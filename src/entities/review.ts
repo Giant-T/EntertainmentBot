@@ -1,9 +1,9 @@
 import { ObjectId } from 'mongodb';
 import { Column, Entity, ObjectIdColumn, Unique } from 'typeorm';
 
-@Entity({ name: 'consumed' })
+@Entity({ name: 'review' })
 @Unique(['item_id', 'user_id', 'type'])
-export default class Consumed {
+export default class Review {
   @ObjectIdColumn()
   readonly id: ObjectId;
 
@@ -11,6 +11,13 @@ export default class Consumed {
   title: string;
   @Column('int')
   item_id: number;
+  @Column()
+  genres: string[];
+
+  @Column('int')
+  rating: number;
+  @Column()
+  review: string;
 
   @Column()
   user_id: string;

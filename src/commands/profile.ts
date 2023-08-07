@@ -74,7 +74,7 @@ const Profile: Command = {
             value: value.title,
           }),
           (interaction, value) =>
-            sendDetailedMovieEmbed(interaction, value.consumed_id)
+            sendDetailedMovieEmbed(interaction, value.item_id)
         );
       }
     });
