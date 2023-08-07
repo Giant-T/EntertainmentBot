@@ -13,6 +13,8 @@ import BotDataSource from '../dataSource.js';
 import Consumed from '../entities/consumed.js';
 import sendPager from '../embeds/pager.js';
 import sendDetailedMovieEmbed from '../embeds/detailedMovieEmbed.js';
+import Review from '../entities/review.js';
+import sendReviewEmbed from '../embeds/reviewEmbed.js';
 
 const Profile: Command = {
   data: new SlashCommandBuilder()
@@ -29,20 +31,37 @@ const Profile: Command = {
       where: { user_id: user.id, type: 'movie' },
       order: { title: 1 },
     });
+    const reviewedMovies = await BotDataSource.mongoManager.find(Review, {
+      where: {
+        user_id: user.id,
+        type: 'movie',
+      },
+      order: { title: 1 },
+    });
 
     const embed = new EmbedBuilder()
       .setTitle(`Profil de ${user.username}`)
       .setColor(user.accentColor ?? Colors.DarkAqua)
       .setImage(user.avatarURL() ?? user.defaultAvatarURL)
-      .addFields({
-        name: 'Nombre de films visionnés:',
-        value: moviesSeen.length.toString(),
-      });
+      .addFields(
+        {
+          name: 'Nombre de films visionnés:',
+          value: moviesSeen.length.toString(),
+        },
+        {
+          name: "Nombre d'évaluation de films:",
+          value: reviewedMovies.length.toString(),
+        }
+      );
 
     const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setEmoji('👁️')
+        .setLabel('👁️🎬')
         .setCustomId('seen')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel('⭐🎬')
+        .setCustomId('reviewedMovies')
         .setStyle(ButtonStyle.Primary)
     );
 
@@ -73,6 +92,21 @@ const Profile: Command = {
           }),
           (interaction, value) =>
             sendDetailedMovieEmbed(interaction, value.item_id)
+        );
+      } else if (buttonInteraction.customId === 'reviewedMovies') {
+        sendPager(
+          buttonInteraction,
+          message,
+          reviewedMovies,
+          `Films évalués par ${user.username}`,
+          (value, index) => ({
+            name: `${index + 1} - ${value.title}`,
+            value: value.rating
+              ? `Vous avez donné une note de ${value.rating}.`
+              : "Vous n'avez pas donné de note à ce film",
+          }),
+          (interaction, value) =>
+            sendReviewEmbed(interaction, value, user.username)
         );
       }
     });

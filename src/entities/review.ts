@@ -16,9 +16,9 @@ export default class Review {
   genres: string[];
 
   @Column('int')
-  rating: number;
+  rating?: number;
   @Column()
-  review: string;
+  review?: string;
 
   @Column()
   user_id: string;
@@ -28,5 +28,9 @@ export default class Review {
 
   public get formatted_review(): string {
     return truncate(this.review, 1024);
+  }
+
+  public get formatted_genres(): string {
+    return this.genres.join(', ');
   }
 }
