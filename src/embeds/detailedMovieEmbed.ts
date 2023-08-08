@@ -22,6 +22,7 @@ import BotDataSource from '../dataSource.js';
 import UserInteraction from '../types/UserInteraction.js';
 import Movie from '../models/movie.js';
 import Review from '../entities/review.js';
+import moment from 'moment';
 
 async function sendDetailedMovieEmbed(
   interaction: UserInteraction,
@@ -54,6 +55,10 @@ async function sendDetailedMovieEmbed(
     new ButtonBuilder()
       .setCustomId('review')
       .setEmoji('📜')
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId('schedule')
+      .setEmoji('📅')
       .setStyle(ButtonStyle.Success)
   );
 
@@ -97,6 +102,8 @@ function addDetailedButtonInteractions(
       await rateMovie(buttonInteraction, message, movie);
     } else if (buttonInteraction.customId === 'review') {
       await reviewMovie(buttonInteraction, movie);
+    } else if (buttonInteraction.customId === 'schedule') {
+      await scheduleMovie(buttonInteraction, movie);
     }
   });
 }
@@ -267,6 +274,96 @@ async function reviewMovie(interaction: UserInteraction, movie: DetailedMovie) {
       {
         upsert: true,
       }
+    );
+  }
+}
+
+async function scheduleMovie(
+  interaction: UserInteraction,
+  movie: DetailedMovie
+) {
+  const modal = new ModalBuilder()
+    .setTitle(movie.formatted_title)
+    .setCustomId('movieScheduler');
+
+  const actionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(
+    new TextInputBuilder()
+      .setLabel('Date de visionnement')
+      .setPlaceholder('aaaa-mm-jj')
+      .setCustomId('scheduledDate')
+      .setStyle(TextInputStyle.Short)
+  );
+
+  modal.addComponents(actionRow);
+
+  interaction.showModal(modal);
+
+  const filter = (modalInteraction: ModalSubmitInteraction) =>
+    modalInteraction.user.id === interaction.user.id;
+
+  const submitted = await interaction.awaitModalSubmit({
+    dispose: true,
+    time: 60_000,
+    filter,
+  });
+
+  if (submitted) {
+    await submitted.deferReply({ ephemeral: true });
+    const date = moment(
+      submitted.fields.getTextInputValue('scheduledDate'),
+      'YYYY-MM-DD'
+    );
+
+    // Si la date est invalide
+    if (!date.isValid()) {
+      submitted.editReply('Le format de date fourni est invalide.');
+      return;
+    }
+
+    // Si le film est déjà visionné
+    if (
+      await BotDataSource.mongoManager.findOne(Consumed, {
+        where: {
+          user_id: interaction.user.id,
+          type: 'movie',
+          item_id: movie.id,
+          scheduled_date: {
+            $exists: false,
+          },
+        },
+      })
+    ) {
+      submitted.editReply('Vous avez déjà visionné ce film.');
+      return;
+    }
+
+    await BotDataSource.mongoManager.updateOne(
+      Consumed,
+      {
+        user_id: interaction.user.id,
+        item_id: movie.id,
+        type: 'movie',
+      },
+      {
+        $set: {
+          scheduled_date: date,
+        },
+        $setOnInsert: {
+          title: movie.title,
+          user_id: interaction.user.id,
+          item_id: movie.id,
+          type: 'movie',
+        },
+      },
+      { upsert: true }
+    );
+
+    moment().locale('fr');
+
+    submitted.editReply(
+      `Vous avez planifié le visionnement de ${movie.title} le ${date.format(
+        'YYYY-MM-DD'
+      )}`
     );
   }
 }

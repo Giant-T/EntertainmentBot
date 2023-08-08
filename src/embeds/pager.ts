@@ -86,6 +86,14 @@ function addFields<T>(
   });
 }
 
+/**
+ * Génère l'embed de base qui contient la liste
+ * @param title Titre du embed
+ * @param values Les valeurs de la liste
+ * @param offset Le décalement des valeurs
+ * @param row La définition d'une colonne
+ * @returns L'embed généré
+ */
 function generatePager<T>(
   title: string,
   values: T[],
@@ -99,6 +107,14 @@ function generatePager<T>(
   return embed;
 }
 
+/**
+ * Fonction qui envoie un embed paginé
+ * @param interaction L'interaction effectuée par l'utilisateur
+ * @param values Les valeurs a affichées
+ * @param title Le titre de la liste paginé
+ * @param row La définition d'une ligne
+ * @param sendDetailedView Ce qui doit être exécuté lors du clique d'un bouton correspondant à la valeur
+ */
 async function sendPager<T>(
   interaction: UserInteraction,
   values: T[],

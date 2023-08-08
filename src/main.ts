@@ -1,4 +1,5 @@
 import {
+  ActivityType,
   Client,
   Events,
   GatewayIntentBits,
@@ -11,13 +12,20 @@ import Commands from './commands/index.js';
 import Command from './models/command.js';
 
 import BotDataSource from './dataSource.js';
+import setupSchedulesResolver from './utils/resolveSchedules.js';
 
+/**
+ * Fonction principale du programme.
+ */
 async function main(): Promise<void> {
   process.title = 'discordbot';
   dotenv.config();
 
+  setupSchedulesResolver();
+
   const { DISCORD_TOKEN, CLIENT_ID } = process.env;
 
+  // Indique les intentions du bot
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
@@ -26,7 +34,9 @@ async function main(): Promise<void> {
     ],
   });
 
+  // S'execute lorsque le bot est prêt
   client.once(Events.ClientReady, (c) => {
+    client.user.setActivity('Un bon film', { type: ActivityType.Watching });
     console.log(`Prêt! 🟢 Connecté en tant que ${c.user.tag} 🤖`);
   });
 
@@ -43,6 +53,7 @@ async function main(): Promise<void> {
 
   const rest = new REST().setToken(DISCORD_TOKEN);
 
+  // Enregistre les commandes pour avoir l'autocomplétion dans discord
   try {
     console.log(
       `Début du rafraichissement de ${slashCommands.length} commandes (/).`
@@ -81,6 +92,7 @@ async function main(): Promise<void> {
   client.login(DISCORD_TOKEN);
 }
 
+// Se connecte à la base de données
 BotDataSource.initialize().then(async () => {
   main();
 });

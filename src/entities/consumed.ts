@@ -16,5 +16,8 @@ export default class Consumed {
   user_id: string;
 
   @Column()
+  scheduled_date?: Date;
+
+  @Column()
   type: 'movie' | 'game';
 }

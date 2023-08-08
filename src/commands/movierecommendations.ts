@@ -1,4 +1,4 @@
-import { CommandInteraction, Message, SlashCommandBuilder } from 'discord.js';
+import { CommandInteraction, SlashCommandBuilder } from 'discord.js';
 import Command from '../models/command.js';
 import sendPager from '../embeds/pager.js';
 import Review from '../entities/review.js';
@@ -6,6 +6,7 @@ import sendDetailedMovieEmbed from '../embeds/detailedMovieEmbed.js';
 import BotDataSource from '../dataSource.js';
 import { Document } from 'typeorm';
 
+// Recommande un film à l'utilisateur selon les films apprécié par un autre utilisateur
 const MovieRecommendations: Command = {
   data: new SlashCommandBuilder()
     .setName('recommandationfilm')
@@ -39,7 +40,7 @@ const MovieRecommendations: Command = {
       },
     ];
 
-    // Requette de recommendations
+    // Requete de recommendations
     // En fonction des genres aimés et de la note donnée par l'autre utilisateur
     const recommendations: Review[] = await BotDataSource.mongoManager
       .aggregate(Review, [

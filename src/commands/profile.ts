@@ -16,6 +16,7 @@ import sendDetailedMovieEmbed from '../embeds/detailedMovieEmbed.js';
 import Review from '../entities/review.js';
 import sendReviewEmbed from '../embeds/reviewEmbed.js';
 
+// Retourne le profile d'un utilisateur
 const Profile: Command = {
   data: new SlashCommandBuilder()
     .setName('profil')
@@ -28,7 +29,11 @@ const Profile: Command = {
     const user = interaction.options.getUser('utilisateur') ?? interaction.user;
 
     const moviesSeen = await BotDataSource.mongoManager.find(Consumed, {
-      where: { user_id: user.id, type: 'movie' },
+      where: {
+        user_id: user.id,
+        type: 'movie',
+        scheduled_date: { $exists: false },
+      },
       order: { title: 1 },
     });
     const reviewedMovies = await BotDataSource.mongoManager.find(Review, {

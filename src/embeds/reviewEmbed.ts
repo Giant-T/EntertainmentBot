@@ -2,6 +2,12 @@ import { EmbedBuilder } from 'discord.js';
 import Review from '../entities/review.js';
 import UserInteraction from '../types/UserInteraction.js';
 
+/**
+ * Envoie un message contenant une évaluation
+ * @param interaction Interaction de l'utilisateur
+ * @param review L'evaluation de l'utilisateur
+ * @param username Le nom de l'utilisateur qui a fait cette évaluation
+ */
 export default function sendReviewEmbed(
   interaction: UserInteraction,
   review: Review,

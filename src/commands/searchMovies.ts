@@ -5,6 +5,7 @@ import MovieRequester from '../utils/movieRequester.js';
 import sendPager from '../embeds/pager.js';
 import sendDetailedMovieEmbed from '../embeds/detailedMovieEmbed.js';
 
+// Permet à l'utilisateur de rechercher un film
 const SearchMovies: Command = {
   data: new SlashCommandBuilder()
     .setName('recherchefilm')

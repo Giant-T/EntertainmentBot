@@ -8,6 +8,7 @@ dotenv.config();
 
 const { HOST, PORT, DB_USERNAME, DB_PASSWORD, DATABASE } = process.env;
 
+// Définition de la source de donnée
 const BotDataSource = new DataSource({
   type: 'mongodb',
   host: HOST,
