@@ -35,7 +35,7 @@ const MovieRecommendations: Command = {
       {
         $group: {
           _id: '$genres',
-          score: { $avg: '$rating' },
+          score: { $sum: '$rating' },
         },
       },
     ];
