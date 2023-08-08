@@ -1,6 +1,8 @@
-import { CommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { CommandInteraction, Message, SlashCommandBuilder } from 'discord.js';
 import Command from '../models/command.js';
 import sendPager from '../embeds/pager.js';
+import Review from '../entities/review.js';
+import sendDetailedMovieEmbed from '../embeds/detailedMovieEmbed.js';
 
 const Movierecommendations: Command = {
   data: new SlashCommandBuilder()
@@ -13,18 +15,22 @@ const Movierecommendations: Command = {
     )
     .setDescription("Recommandation d'un autre utilisateur."),
   async execute(interaction: CommandInteraction) {
-    const message = await interaction.deferReply({
+    const message: Message = await interaction.deferReply({
       fetchReply: true,
     });
     const user = interaction.options.getUser('utilisateur', true);
 
-    sendPager(
+    sendPager<Review>(
       interaction,
-      message,
       [],
       `Recommandations de ${user.username}`,
-      (value, index) => ({ name: '', value: '' }),
-      (interaction, value) => {}
+      (value, index) => ({
+        name: `${index} - ${value.title}`,
+        value: `L'utilisateur a donné une note de ${value.rating}.`,
+      }),
+      (interaction, value) => {
+        sendDetailedMovieEmbed(interaction, value.item_id);
+      }
     );
   },
 };

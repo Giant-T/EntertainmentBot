@@ -101,7 +101,6 @@ function generatePager<T>(
 
 async function sendPager<T>(
   interaction: UserInteraction,
-  message: Message<boolean> | InteractionResponse<boolean>,
   values: T[],
   title: string,
   row: (value: T, index: number) => APIEmbedField,
@@ -117,6 +116,8 @@ async function sendPager<T>(
       generateArrowsRow(values, offset),
     ],
   });
+
+  const message = await interaction.fetchReply();
 
   const addButtonListener = () => {
     const filter = (click: ButtonInteraction): boolean => {

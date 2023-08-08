@@ -78,12 +78,11 @@ const Profile: Command = {
     });
 
     collector.on('collect', async (buttonInteraction: ButtonInteraction) => {
-      const message = await buttonInteraction.deferReply();
+      await buttonInteraction.deferReply();
 
       if (buttonInteraction.customId === 'seen') {
         sendPager(
           buttonInteraction,
-          message,
           moviesSeen,
           `Films vus par ${user.username}`,
           (value, index) => ({
@@ -96,7 +95,6 @@ const Profile: Command = {
       } else if (buttonInteraction.customId === 'reviewedMovies') {
         sendPager(
           buttonInteraction,
-          message,
           reviewedMovies,
           `Films évalués par ${user.username}`,
           (value, index) => ({

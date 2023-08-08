@@ -16,8 +16,7 @@ const SearchMovies: Command = {
     )
     .setDescription('Recherche de film'),
   async execute(interaction: CommandInteraction) {
-    const message = await interaction.deferReply({
-      fetchReply: true,
+    await interaction.deferReply({
       ephemeral: true,
     });
 
@@ -31,7 +30,6 @@ const SearchMovies: Command = {
 
     sendPager(
       interaction,
-      message,
       results,
       `Recherche de films '${query}'`,
       (value, index) => ({
