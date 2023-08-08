@@ -10,7 +10,7 @@ import {
   InteractionResponse,
   Message,
 } from 'discord.js';
-import UserInteraction from '../types/UserInteraction';
+import UserInteraction from '../types/userInteraction';
 
 type Direction = 'right' | 'left';
 const PAGE_SIZE = 5;

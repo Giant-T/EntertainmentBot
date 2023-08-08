@@ -1,6 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import Review from '../entities/review.js';
-import UserInteraction from '../types/UserInteraction.js';
+import UserInteraction from '../types/userInteraction.js';
 
 /**
  * Envoie un message contenant une évaluation

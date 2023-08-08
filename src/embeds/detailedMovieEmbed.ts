@@ -19,7 +19,7 @@ import DetailedMovie from '../models/detailedMovie.js';
 import MovieRequester from '../utils/movieRequester.js';
 import Consumed from '../entities/consumed.js';
 import BotDataSource from '../dataSource.js';
-import UserInteraction from '../types/UserInteraction.js';
+import UserInteraction from '../types/userInteraction.js';
 import Movie from '../models/movie.js';
 import Review from '../entities/review.js';
 import moment from 'moment';
