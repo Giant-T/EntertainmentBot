@@ -12,6 +12,12 @@ import UserInteraction from '../types/userInteraction.js';
 type Direction = 'right' | 'left';
 const PAGE_SIZE = 5;
 
+/**
+ * Génère la ligne de boutons de numéro
+ * @param values La liste de valeurs
+ * @param offset Le décalement des valeurs
+ * @returns La ligne de boutons
+ */
 function generateNumbersRow<T>(
   values: T[],
   offset: number
@@ -47,6 +53,12 @@ function generateNumbersRow<T>(
   return new ActionRowBuilder<ButtonBuilder>().addComponents(...numbers);
 }
 
+/**
+ * Génère la ligne des flêches de navigations
+ * @param values La liste des valeurs
+ * @param offset Le décalement des valeurs
+ * @returns La ligne de boutons
+ */
 function generateArrowsRow<T>(
   values: T[],
   offset: number
@@ -67,6 +79,13 @@ function generateArrowsRow<T>(
   return new ActionRowBuilder<ButtonBuilder>().addComponents(...arrows);
 }
 
+/**
+ * Ajoutes les lignes de valeurs dans l'embed
+ * @param embed L'embed qui contient la liste
+ * @param values La liste des valeurs
+ * @param offset Le décalement des valeurs
+ * @param row La définition d'une ligne
+ */
 function addFields<T>(
   embed: EmbedBuilder,
   values: T[],

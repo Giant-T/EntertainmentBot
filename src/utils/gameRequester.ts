@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 import moment from 'moment';
 import Requester from './requester.js';
 import Game from '../models/game.js';
-import Entertainment from '../types/entertainment.js';
+import Entertainment from '../models/entertainment.js';
 
 dotenv.config();
 
@@ -22,7 +22,9 @@ class GameRequester extends Requester {
       },
     });
 
+    // S'execute avant toutes les requêtes
     axiosInstance.interceptors.request.use(async (config) => {
+      // Va chercher le token de Twitch si il n'est pas défini ou expiré
       if (
         this.token === undefined ||
         this.token.start_time
@@ -41,6 +43,10 @@ class GameRequester extends Requester {
     super(axiosInstance);
   }
 
+  /**
+   * Retourne la valeur de l'instance actuelle du singleton
+   * @returns L'instance du singleton
+   */
   static getInstance(): GameRequester {
     if (!GameRequester.instance) {
       GameRequester.instance = new GameRequester();
@@ -49,6 +55,10 @@ class GameRequester extends Requester {
     return GameRequester.instance;
   }
 
+  /**
+   * Va chercher le token de Twitch (pour igdb)
+   * @returns Le token de Twitch
+   */
   private static async GetTwitchToken(): Promise<TwitchToken> {
     const response: TwitchToken = (
       await axios.post(

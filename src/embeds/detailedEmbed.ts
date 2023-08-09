@@ -21,12 +21,18 @@ import BotDataSource from '../dataSource.js';
 import UserInteraction from '../types/userInteraction.js';
 import Review from '../entities/review.js';
 import moment from 'moment';
-import Entertainment from '../types/entertainment.js';
+import Entertainment from '../models/entertainment.js';
 import EntertainmentType, {
   getRequester,
   getStrings,
 } from '../types/entertainmentType.js';
 
+/**
+ * Envoie un embed détaillé d'un article
+ * @param interaction L'interaction de l'utilisateur
+ * @param item L'article ou l'id de l'article
+ * @param type Le type de l'article si on fournit seulement un id
+ */
 async function sendDetailedEmbed(
   interaction: UserInteraction,
   item: Entertainment | number,
@@ -58,7 +64,7 @@ async function sendDetailedEmbed(
 
   const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
-      .setCustomId('markAsSeen')
+      .setCustomId('consume')
       .setEmoji('👁️')
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
@@ -84,10 +90,16 @@ async function sendDetailedEmbed(
   addDetailedButtonInteractions(interaction, message, item);
 }
 
+/**
+ * Ajoute les interactions des boutons
+ * @param interaction L'interaction de l'utilisateur
+ * @param message Le message envoyé par le bot
+ * @param item L'article de l'embed
+ */
 function addDetailedButtonInteractions(
   interaction: UserInteraction,
   message: Message<boolean>,
-  movie: Entertainment
+  item: Entertainment
 ) {
   const filter = (click: ButtonInteraction): boolean => {
     return click.user.id === interaction.user.id;
@@ -100,28 +112,34 @@ function addDetailedButtonInteractions(
   });
 
   collector.on('collect', async (buttonInteraction: ButtonInteraction) => {
-    if (buttonInteraction.customId === 'markAsSeen') {
+    if (buttonInteraction.customId === 'consume') {
       await buttonInteraction.deferReply({
         ephemeral: true,
       });
       buttonInteraction.editReply({
-        content: await markItemAsSeen(interaction, movie),
+        content: await consumeItem(interaction, item),
       });
     } else if (buttonInteraction.customId === 'rate') {
       const message = await buttonInteraction.deferReply({
         ephemeral: true,
         fetchReply: true,
       });
-      await rateItem(buttonInteraction, message, movie);
+      await rateItem(buttonInteraction, message, item);
     } else if (buttonInteraction.customId === 'review') {
-      await reviewItem(buttonInteraction, movie);
+      await reviewItem(buttonInteraction, item);
     } else if (buttonInteraction.customId === 'schedule') {
-      await scheduleItem(buttonInteraction, movie);
+      await scheduleItem(buttonInteraction, item);
     }
   });
 }
 
-async function markItemAsSeen(
+/**
+ * Indique la consommation d'un article
+ * @param interaction L'interaction de l'utilisateur
+ * @param item L'article à consommer
+ * @returns Un message indiquant la réussite
+ */
+async function consumeItem(
   interaction: UserInteraction,
   item: Entertainment
 ): Promise<string> {
@@ -133,10 +151,14 @@ async function markItemAsSeen(
 
   let response: string = '';
 
+  // Ajoute la consommation et retire la date prévue si la consommation existait
   await BotDataSource.mongoManager.updateOne(
     Consumed,
     { user_id: interaction.user.id, type: item.type, item_id: item.id },
     {
+      $unset: {
+        scheduled_date: '',
+      },
       $setOnInsert: {
         ...newConsumed,
       },
@@ -151,6 +173,12 @@ async function markItemAsSeen(
   return response;
 }
 
+/**
+ * Ajoute une note à un article
+ * @param interaction L'interaction de l'utilisateur
+ * @param message Le message envoyé par le bot
+ * @param item L'article à noter
+ */
 async function rateItem(
   interaction: UserInteraction,
   message: Message<boolean>,
@@ -173,6 +201,7 @@ async function rateItem(
     return;
   }
 
+  // La selection de notes pour l'utilisateur
   const ratingSelect = new StringSelectMenuBuilder()
     .setCustomId('rating')
     .setPlaceholder('Choisissez une note...')
@@ -210,6 +239,7 @@ async function rateItem(
 
       const rating = +selectInteraction.values[0];
 
+      // Ajoute ou modifie la note
       await BotDataSource.mongoManager.updateOne(
         Review,
         {
@@ -240,6 +270,11 @@ async function rateItem(
   );
 }
 
+/**
+ * Ajoute une critique à un article
+ * @param interaction L'interaction de l'utilisateur
+ * @param item L'article à critiquer
+ */
 async function reviewItem(interaction: UserInteraction, item: Entertainment) {
   const modal = new ModalBuilder()
     .setTitle(item.formatted_title)
@@ -270,6 +305,7 @@ async function reviewItem(interaction: UserInteraction, item: Entertainment) {
     submitted.reply(`Vous avez laissé une critique à « ${item.title} ».`);
     const reviewText = submitted.fields.getTextInputValue('reviewText');
 
+    // Ajoute ou modifie la review de l'article
     await BotDataSource.manager.getMongoRepository(Review).updateOne(
       {
         user_id: interaction.user.id,
@@ -295,6 +331,11 @@ async function reviewItem(interaction: UserInteraction, item: Entertainment) {
   }
 }
 
+/**
+ * Ajoute une date de consommation de l'article
+ * @param interaction L'interaction de l'utilisateur
+ * @param item L'article qui sera consommé par l'utilisateur
+ */
 async function scheduleItem(interaction: UserInteraction, item: Entertainment) {
   const modal = new ModalBuilder()
     .setTitle(item.formatted_title)
@@ -317,7 +358,7 @@ async function scheduleItem(interaction: UserInteraction, item: Entertainment) {
 
   const submitted = await interaction.awaitModalSubmit({
     dispose: true,
-    time: 60_000,
+    time: 60_000, // 1 min
     filter,
   });
 
@@ -334,7 +375,7 @@ async function scheduleItem(interaction: UserInteraction, item: Entertainment) {
       return;
     }
 
-    // Si le film est déjà visionné
+    // Si l'article est déjà consommé
     if (
       await BotDataSource.mongoManager.findOne(Consumed, {
         where: {
@@ -353,6 +394,7 @@ async function scheduleItem(interaction: UserInteraction, item: Entertainment) {
       return;
     }
 
+    // Ajoute une date de consommation
     await BotDataSource.mongoManager.updateOne(
       Consumed,
       {

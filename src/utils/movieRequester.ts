@@ -1,7 +1,7 @@
 import axios, { Axios } from 'axios';
 import * as dotenv from 'dotenv';
 import Requester from './requester.js';
-import Entertainment from '../types/entertainment.js';
+import Entertainment from '../models/entertainment.js';
 import MovieSearchResult from '../models/movieSearchResult.js';
 import DetailedMovie from '../models/detailedMovie.js';
 import Movie from '../models/movie.js';
@@ -29,6 +29,10 @@ class MovieRequester extends Requester {
     super(axiosInstance);
   }
 
+  /**
+   * Retourne la valeur de l'instance actuelle du singleton
+   * @returns L'instance du singleton
+   */
   static getInstance(): MovieRequester {
     if (!MovieRequester.instance) {
       MovieRequester.instance = new MovieRequester();

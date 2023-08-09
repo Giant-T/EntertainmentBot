@@ -1,8 +1,8 @@
-import DetailedMovie from '../models/detailedMovie.js';
-import Game from '../models/game.js';
-import Movie from '../models/movie.js';
+import DetailedMovie from './detailedMovie.js';
+import Game from './game.js';
+import Movie from './movie.js';
 import truncate from '../utils/truncate.js';
-import EntertainmentType from './entertainmentType.js';
+import EntertainmentType from '../types/entertainmentType.js';
 
 export default class Entertainment {
   id: number;
