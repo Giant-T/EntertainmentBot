@@ -15,27 +15,24 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from 'discord.js';
-import DetailedMovie from '../models/detailedMovie.js';
 import MovieRequester from '../utils/movieRequester.js';
 import Consumed from '../entities/consumed.js';
 import BotDataSource from '../dataSource.js';
 import UserInteraction from '../types/userInteraction.js';
-import Movie from '../models/movie.js';
 import Review from '../entities/review.js';
 import moment from 'moment';
+import Entertainment from '../types/entertainment.js';
 
 async function sendDetailedMovieEmbed(
   interaction: UserInteraction,
-  movieId: number
+  id: number
 ) {
-  const movie = new DetailedMovie(
-    (await MovieRequester.get(`movie/${movieId}?language=fr-CAN`)).data
-  );
+  const movie = await MovieRequester.getInstance().getById(id);
 
   const embed = new EmbedBuilder()
     .setTitle(movie.title)
     .setColor(Colors.DarkAqua)
-    .setThumbnail(movie.full_poster_path)
+    .setThumbnail(movie.full_image_path)
     .setDescription(movie.overview)
     .setFields({
       name: 'Date de sortie',
@@ -74,7 +71,7 @@ async function sendDetailedMovieEmbed(
 function addDetailedButtonInteractions(
   interaction: UserInteraction,
   message: Message<boolean>,
-  movie: DetailedMovie
+  movie: Entertainment
 ) {
   const filter = (click: ButtonInteraction): boolean => {
     return click.user.id === interaction.user.id;
@@ -110,7 +107,7 @@ function addDetailedButtonInteractions(
 
 async function markMovieAsSeen(
   interaction: UserInteraction,
-  movie: Movie
+  movie: Entertainment
 ): Promise<string> {
   const newConsumed = new Consumed();
   newConsumed.title = movie.title;
@@ -139,7 +136,7 @@ async function markMovieAsSeen(
 async function rateMovie(
   interaction: UserInteraction,
   message: Message<boolean>,
-  movie: DetailedMovie
+  movie: Entertainment
 ) {
   if (
     !(await BotDataSource.mongoManager.findOne(Consumed, {
@@ -209,7 +206,7 @@ async function rateMovie(
             type: 'movie',
             item_id: movie.id,
             title: movie.title,
-            genres: movie.genres.map((x) => x.name),
+            genres: movie.genres,
           },
         },
         { upsert: true }
@@ -223,7 +220,7 @@ async function rateMovie(
   );
 }
 
-async function reviewMovie(interaction: UserInteraction, movie: DetailedMovie) {
+async function reviewMovie(interaction: UserInteraction, movie: Entertainment) {
   const modal = new ModalBuilder()
     .setTitle(movie.formatted_title)
     .setCustomId('reviewModal');
@@ -268,7 +265,7 @@ async function reviewMovie(interaction: UserInteraction, movie: DetailedMovie) {
           type: 'movie',
           item_id: movie.id,
           title: movie.title,
-          genres: movie.genres.map((x) => x.name),
+          genres: movie.genres,
         },
       },
       {
@@ -280,7 +277,7 @@ async function reviewMovie(interaction: UserInteraction, movie: DetailedMovie) {
 
 async function scheduleMovie(
   interaction: UserInteraction,
-  movie: DetailedMovie
+  movie: Entertainment
 ) {
   const modal = new ModalBuilder()
     .setTitle(movie.formatted_title)

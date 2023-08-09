@@ -1,19 +1,15 @@
 import Movie from './movie.js';
 
 export default class DetailedMovie extends Movie {
-  genres: MovieGenre[];
+  genres: string[];
 
   constructor(movie: any) {
     super(movie);
 
-    this.genres = movie.genres;
+    this.genres = movie.genres.map((x) => x.name);
   }
 
   public get formatted_genres() {
-    return this.genres.map((x) => x.name).join(', ');
+    return this.genres.join(', ');
   }
-}
-
-interface MovieGenre {
-  name: string;
 }

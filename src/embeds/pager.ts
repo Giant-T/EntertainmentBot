@@ -5,12 +5,9 @@ import {
   ButtonInteraction,
   ButtonStyle,
   Colors,
-  CommandInteraction,
   EmbedBuilder,
-  InteractionResponse,
-  Message,
 } from 'discord.js';
-import UserInteraction from '../types/userInteraction';
+import UserInteraction from '../types/userInteraction.js';
 
 type Direction = 'right' | 'left';
 const PAGE_SIZE = 5;
