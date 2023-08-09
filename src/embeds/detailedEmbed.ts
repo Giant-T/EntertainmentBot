@@ -107,7 +107,6 @@ function addDetailedButtonInteractions(
 
   const collector = message.createMessageComponentCollector({
     filter,
-    dispose: true,
     time: 45000,
   });
 
@@ -226,7 +225,6 @@ async function rateItem(
     action.user.id === interaction.user.id && action.customId === 'rating';
 
   const collector = message.createMessageComponentCollector({
-    dispose: true,
     filter,
     time: 30000,
     max: 1,
@@ -314,7 +312,6 @@ async function reviewItem(interaction: UserInteraction, item: Entertainment) {
     modalInteraction.user.id === interaction.user.id;
 
   const submitted = await interaction.awaitModalSubmit({
-    dispose: true,
     time: 480_000, // 8 minutes
     filter,
   });
@@ -375,7 +372,6 @@ async function scheduleItem(interaction: UserInteraction, item: Entertainment) {
     modalInteraction.user.id === interaction.user.id;
 
   const submitted = await interaction.awaitModalSubmit({
-    dispose: true,
     time: 60_000, // 1 min
     filter,
   });
