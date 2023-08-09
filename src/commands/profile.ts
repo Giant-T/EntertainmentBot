@@ -12,9 +12,10 @@ import Command from '../models/command.js';
 import BotDataSource from '../dataSource.js';
 import Consumed from '../entities/consumed.js';
 import sendPager from '../embeds/pager.js';
-import sendDetailedMovieEmbed from '../embeds/detailedMovieEmbed.js';
+import sendDetailedEmbed from '../embeds/detailedEmbed.js';
 import Review from '../entities/review.js';
 import sendReviewEmbed from '../embeds/reviewEmbed.js';
+import EntertainmentType from '../types/entertainmentType.js';
 
 // Retourne le profile d'un utilisateur
 const Profile: Command = {
@@ -31,7 +32,7 @@ const Profile: Command = {
     const moviesSeen = await BotDataSource.mongoManager.find(Consumed, {
       where: {
         user_id: user.id,
-        type: 'movie',
+        type: EntertainmentType.Movie,
         scheduled_date: { $exists: false },
       },
       order: { title: 1 },
@@ -39,7 +40,7 @@ const Profile: Command = {
     const reviewedMovies = await BotDataSource.mongoManager.find(Review, {
       where: {
         user_id: user.id,
-        type: 'movie',
+        type: EntertainmentType.Movie,
       },
       order: { title: 1 },
     });
@@ -94,8 +95,7 @@ const Profile: Command = {
             name: (index + 1).toString(),
             value: value.title,
           }),
-          (interaction, value) =>
-            sendDetailedMovieEmbed(interaction, value.item_id)
+          (interaction, value) => sendDetailedEmbed(interaction, value.item_id)
         );
       } else if (buttonInteraction.customId === 'reviewedMovies') {
         sendPager(

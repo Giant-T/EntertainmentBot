@@ -3,6 +3,8 @@ import TwitchToken from '../types/twitchToken.js';
 import * as dotenv from 'dotenv';
 import moment from 'moment';
 import Requester from './requester.js';
+import Game from '../models/game.js';
+import Entertainment from '../types/entertainment.js';
 
 dotenv.config();
 
@@ -48,27 +50,37 @@ class GameRequester extends Requester {
   }
 
   private static async GetTwitchToken(): Promise<TwitchToken> {
-    const response = await axios.post<any, TwitchToken>(
-      `https://id.twitch.tv/oauth2/token?client_id=${GAME_CLIENT_ID}&client_secret=${GAME_CLIENT_SECRET}&grant_type=client_credentials`
-    );
+    const response: TwitchToken = (
+      await axios.post(
+        `https://id.twitch.tv/oauth2/token?client_id=${GAME_CLIENT_ID}&client_secret=${GAME_CLIENT_SECRET}&grant_type=client_credentials`
+      )
+    ).data;
 
     response.start_time = moment();
 
     return response;
   }
 
-  async search(query: string): Promise<any> {
+  async search(query: string): Promise<Entertainment[]> {
+    return (
+      await this.axios.post(
+        'games',
+        `search "${query}"; fields id, genres.name, first_release_date, cover.image_id, name, summary;`
+      )
+    ).data.map((x: any) => new Entertainment(new Game(x)));
+  }
+
+  async getById(id: number): Promise<Entertainment> {
     return await this.axios.post(
       'games',
-      `search "${query}"; fields id, genres, first_release_date, cover, name, summary;`
+      `fields id, genres.name, first_release_date, cover.image_id, name, summary; where id = ${id};`
     );
   }
 
-  public async getById(id: number): Promise<any> {
-    return await this.axios.post(
-      'games',
-      `fields id, genres, first_release_date, cover, name, summary; where id = ${id};`
-    );
+  async getImagePath(coverId: string): Promise<string> {
+    return (
+      await this.axios.post('covers', `where id = ${coverId}; fields image_id;`)
+    ).data.image_id;
   }
 }
 

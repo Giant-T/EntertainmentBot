@@ -2,7 +2,7 @@ import { CommandInteraction, SlashCommandBuilder } from 'discord.js';
 import Command from '../models/command.js';
 import sendPager from '../embeds/pager.js';
 import Review from '../entities/review.js';
-import sendDetailedMovieEmbed from '../embeds/detailedMovieEmbed.js';
+import sendDetailedEmbed from '../embeds/detailedEmbed.js';
 import BotDataSource from '../dataSource.js';
 import { Document } from 'typeorm';
 
@@ -112,7 +112,7 @@ const MovieRecommendations: Command = {
         value: `L'utilisateur a donné une note de ${value.rating}.`,
       }),
       (interaction, value) => {
-        sendDetailedMovieEmbed(interaction, value.item_id);
+        sendDetailedEmbed(interaction, value.item_id);
       }
     );
   },

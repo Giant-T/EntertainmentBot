@@ -22,23 +22,29 @@ import UserInteraction from '../types/userInteraction.js';
 import Review from '../entities/review.js';
 import moment from 'moment';
 import Entertainment from '../types/entertainment.js';
+import EntertainmentType from '../types/entertainmentType.js';
+import GameRequester from '../utils/gameRequester.js';
 
-async function sendDetailedMovieEmbed(
+async function sendDetailedEmbed(
   interaction: UserInteraction,
-  id: number
+  item: Entertainment | number
 ) {
-  const movie = await MovieRequester.getInstance().getById(id);
+  if (typeof item === 'number' || item.type === EntertainmentType.Movie) {
+    item = await MovieRequester.getInstance().getById(
+      typeof item === 'number' ? item : item.id
+    );
+  }
 
   const embed = new EmbedBuilder()
-    .setTitle(movie.title)
+    .setTitle(item.title)
     .setColor(Colors.DarkAqua)
-    .setThumbnail(movie.full_image_path)
-    .setDescription(movie.overview)
+    .setThumbnail(item.full_image_path)
+    .setDescription(item.overview)
     .setFields({
       name: 'Date de sortie',
-      value: movie.release_date.toLocaleDateString('fr-CA'),
+      value: item.release_date.toLocaleDateString('fr-CA'),
     })
-    .setFooter({ text: movie.formatted_genres });
+    .setFooter({ text: item.formatted_genres });
 
   const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -65,7 +71,7 @@ async function sendDetailedMovieEmbed(
     fetchReply: true,
   });
 
-  addDetailedButtonInteractions(interaction, message, movie);
+  addDetailedButtonInteractions(interaction, message, item);
 }
 
 function addDetailedButtonInteractions(
@@ -89,37 +95,37 @@ function addDetailedButtonInteractions(
         ephemeral: true,
       });
       buttonInteraction.editReply({
-        content: await markMovieAsSeen(interaction, movie),
+        content: await markItemAsSeen(interaction, movie),
       });
     } else if (buttonInteraction.customId === 'rate') {
       const message = await buttonInteraction.deferReply({
         ephemeral: true,
         fetchReply: true,
       });
-      await rateMovie(buttonInteraction, message, movie);
+      await rateItem(buttonInteraction, message, movie);
     } else if (buttonInteraction.customId === 'review') {
-      await reviewMovie(buttonInteraction, movie);
+      await reviewItem(buttonInteraction, movie);
     } else if (buttonInteraction.customId === 'schedule') {
-      await scheduleMovie(buttonInteraction, movie);
+      await scheduleItem(buttonInteraction, movie);
     }
   });
 }
 
-async function markMovieAsSeen(
+async function markItemAsSeen(
   interaction: UserInteraction,
-  movie: Entertainment
+  item: Entertainment
 ): Promise<string> {
   const newConsumed = new Consumed();
-  newConsumed.title = movie.title;
-  newConsumed.item_id = movie.id;
-  newConsumed.type = 'movie';
+  newConsumed.title = item.title;
+  newConsumed.item_id = item.id;
+  newConsumed.type = item.type;
   newConsumed.user_id = interaction.user.id;
 
   let response: string = '';
 
   await BotDataSource.mongoManager.updateOne(
     Consumed,
-    { user_id: interaction.user.id, type: 'movie', item_id: movie.id },
+    { user_id: interaction.user.id, type: 'movie', item_id: item.id },
     {
       $setOnInsert: {
         ...newConsumed,
@@ -128,21 +134,21 @@ async function markMovieAsSeen(
     { upsert: true }
   );
 
-  response = `Vous avez maintenant visionné ${movie.title}.`;
+  response = `Vous avez maintenant visionné ${item.title}.`;
 
   return response;
 }
 
-async function rateMovie(
+async function rateItem(
   interaction: UserInteraction,
   message: Message<boolean>,
-  movie: Entertainment
+  item: Entertainment
 ) {
   if (
     !(await BotDataSource.mongoManager.findOne(Consumed, {
       where: {
-        item_id: movie.id,
-        type: 'movie',
+        item_id: item.id,
+        type: item.type,
         user_id: interaction.user.id,
       },
     }))
@@ -169,7 +175,7 @@ async function rateMovie(
   );
 
   await interaction.editReply({
-    content: `Donnez une note à ${movie.title}`,
+    content: `Donnez une note à ${item.title}`,
     components: [row],
   });
 
@@ -193,9 +199,9 @@ async function rateMovie(
       await BotDataSource.mongoManager.updateOne(
         Review,
         {
-          item_id: movie.id,
+          item_id: item.id,
           user_id: selectInteraction.user.id,
-          type: 'movie',
+          type: item.type,
         },
         {
           $set: {
@@ -203,26 +209,26 @@ async function rateMovie(
           },
           $setOnInsert: {
             user_id: interaction.user.id,
-            type: 'movie',
-            item_id: movie.id,
-            title: movie.title,
-            genres: movie.genres,
+            type: item.type,
+            item_id: item.id,
+            title: item.title,
+            genres: item.genres,
           },
         },
         { upsert: true }
       );
 
       selectInteraction.editReply({
-        content: `Vous avez donné une note de ${rating} à ${movie.title}.`,
+        content: `Vous avez donné une note de ${rating} à ${item.title}.`,
         components: [],
       });
     }
   );
 }
 
-async function reviewMovie(interaction: UserInteraction, movie: Entertainment) {
+async function reviewItem(interaction: UserInteraction, item: Entertainment) {
   const modal = new ModalBuilder()
-    .setTitle(movie.formatted_title)
+    .setTitle(item.formatted_title)
     .setCustomId('reviewModal');
 
   const actionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -247,14 +253,14 @@ async function reviewMovie(interaction: UserInteraction, movie: Entertainment) {
   });
 
   if (submitted) {
-    submitted.reply(`Vous avez laissé une critique à « ${movie.title} ».`);
+    submitted.reply(`Vous avez laissé une critique à « ${item.title} ».`);
     const reviewText = submitted.fields.getTextInputValue('reviewText');
 
     await BotDataSource.manager.getMongoRepository(Review).updateOne(
       {
         user_id: interaction.user.id,
-        type: 'movie',
-        item_id: movie.id,
+        type: item.type,
+        item_id: item.id,
       },
       {
         $set: {
@@ -262,10 +268,10 @@ async function reviewMovie(interaction: UserInteraction, movie: Entertainment) {
         },
         $setOnInsert: {
           user_id: interaction.user.id,
-          type: 'movie',
-          item_id: movie.id,
-          title: movie.title,
-          genres: movie.genres,
+          type: item.type,
+          item_id: item.id,
+          title: item.title,
+          genres: item.genres,
         },
       },
       {
@@ -275,12 +281,9 @@ async function reviewMovie(interaction: UserInteraction, movie: Entertainment) {
   }
 }
 
-async function scheduleMovie(
-  interaction: UserInteraction,
-  movie: Entertainment
-) {
+async function scheduleItem(interaction: UserInteraction, item: Entertainment) {
   const modal = new ModalBuilder()
-    .setTitle(movie.formatted_title)
+    .setTitle(item.formatted_title)
     .setCustomId('movieScheduler');
 
   const actionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -322,8 +325,8 @@ async function scheduleMovie(
       await BotDataSource.mongoManager.findOne(Consumed, {
         where: {
           user_id: interaction.user.id,
-          type: 'movie',
-          item_id: movie.id,
+          type: item.type,
+          item_id: item.id,
           scheduled_date: {
             $exists: false,
           },
@@ -338,18 +341,18 @@ async function scheduleMovie(
       Consumed,
       {
         user_id: interaction.user.id,
-        item_id: movie.id,
-        type: 'movie',
+        item_id: item.id,
+        type: item.type,
       },
       {
         $set: {
           scheduled_date: date,
         },
         $setOnInsert: {
-          title: movie.title,
+          title: item.title,
           user_id: interaction.user.id,
-          item_id: movie.id,
-          type: 'movie',
+          item_id: item.id,
+          type: item.type,
         },
       },
       { upsert: true }
@@ -358,11 +361,11 @@ async function scheduleMovie(
     moment().locale('fr');
 
     submitted.editReply(
-      `Vous avez planifié le visionnement de ${movie.title} le ${date.format(
+      `Vous avez planifié le visionnement de ${item.title} le ${date.format(
         'YYYY-MM-DD'
       )}`
     );
   }
 }
 
-export default sendDetailedMovieEmbed;
+export default sendDetailedEmbed;

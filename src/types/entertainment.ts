@@ -40,7 +40,10 @@ export default class Entertainment {
   }
 
   public get full_image_path(): string {
-    return `https://image.tmdb.org/t/p/original/${this.image_path}`;
+    if (this.type === EntertainmentType.Movie)
+      return `https://image.tmdb.org/t/p/original/${this.image_path}`;
+    else if (this.type === EntertainmentType.VideoGame)
+      return `https://images.igdb.com/igdb/image/upload/t_thumb/${this.image_path}.jpg`;
   }
 
   public get overview(): string {

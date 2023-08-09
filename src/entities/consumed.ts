@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { Column, Entity, ObjectIdColumn, Unique } from 'typeorm';
+import EntertainmentType from '../types/entertainmentType.js';
 
 @Entity({ name: 'consumed' })
 @Unique(['item_id', 'user_id', 'type'])
@@ -19,5 +20,5 @@ export default class Consumed {
   scheduled_date?: Date;
 
   @Column()
-  type: 'movie' | 'game';
+  type: EntertainmentType;
 }

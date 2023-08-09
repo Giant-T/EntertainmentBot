@@ -1,7 +1,7 @@
 import { CommandInteraction, SlashCommandBuilder } from 'discord.js';
 import Command from '../models/command.js';
 import sendPager from '../embeds/pager.js';
-import sendDetailedMovieEmbed from '../embeds/detailedMovieEmbed.js';
+import sendDetailedEmbed from '../embeds/detailedEmbed.js';
 import EntertainmentType, {
   entertainmentTypePlural,
   getRequester,
@@ -54,7 +54,7 @@ const Search: Command = {
         value: value.formatted_overview,
       }),
       (interaction, value) =>
-        sendDetailedMovieEmbed(interaction as CommandInteraction, value.id)
+        sendDetailedEmbed(interaction as CommandInteraction, value)
     );
   },
 };
