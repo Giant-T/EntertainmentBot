@@ -110,7 +110,6 @@ const Profile: Command = {
 
     const collector = message.createMessageComponentCollector({
       max: 1,
-      dispose: true,
       time: 45000,
       filter,
     });

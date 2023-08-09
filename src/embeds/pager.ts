@@ -158,7 +158,6 @@ async function sendPager<T>(
 
     const collector = message.createMessageComponentCollector({
       filter,
-      dispose: true,
       time: 30000,
       max: 1,
     });
