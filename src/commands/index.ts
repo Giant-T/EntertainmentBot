@@ -1,4 +1,4 @@
-import MovieRecommendations from './movierecommendations.js';
+import Recommendation from './recommendation.js';
 import Profile from './profile.js';
 import Helloworld from './helloworld.js';
 import Search from './search.js';
@@ -7,7 +7,7 @@ import Ping from './ping.js';
 
 // Liste des commandes
 const Commands = {
-  MovieRecommendations,
+  Recommendation,
   Profile,
   Helloworld,
   Search,

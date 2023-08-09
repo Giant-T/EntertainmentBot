@@ -5,11 +5,22 @@ import Review from '../entities/review.js';
 import sendDetailedEmbed from '../embeds/detailedEmbed.js';
 import BotDataSource from '../dataSource.js';
 import { Document } from 'typeorm';
+import EntertainmentType from '../types/entertainmentType.js';
 
 // Recommande un film à l'utilisateur selon les films apprécié par un autre utilisateur
-const MovieRecommendations: Command = {
+const Recommendation: Command = {
   data: new SlashCommandBuilder()
-    .setName('recommandationfilm')
+    .setName('recommandation')
+    .addStringOption((options) =>
+      options
+        .setName('type')
+        .setDescription('Type de recommandation')
+        .addChoices(
+          { name: 'Film', value: 'Movie' },
+          { name: 'Jeu Vidéo', value: 'VideoGame' }
+        )
+        .setRequired(true)
+    )
     .addUserOption((options) =>
       options
         .setName('utilisateur')
@@ -20,12 +31,18 @@ const MovieRecommendations: Command = {
   async execute(interaction: CommandInteraction) {
     await interaction.deferReply();
     const user = interaction.options.getUser('utilisateur', true);
+    const type: EntertainmentType =
+      EntertainmentType[
+        interaction.options
+          .get('type', true)
+          .value.toString() as keyof typeof EntertainmentType
+      ];
 
     const genresWithScores: Document[] = [
       {
         $match: {
           user_id: interaction.user.id,
-          type: 'movie',
+          type: type,
           rating: { $ne: null },
         },
       },
@@ -47,6 +64,7 @@ const MovieRecommendations: Command = {
         {
           $match: {
             rating: { $ne: null },
+            type: type,
           },
         },
         {
@@ -112,10 +130,10 @@ const MovieRecommendations: Command = {
         value: `L'utilisateur a donné une note de ${value.rating}.`,
       }),
       (interaction, value) => {
-        sendDetailedEmbed(interaction, value.item_id);
+        sendDetailedEmbed(interaction, value.item_id, type);
       }
     );
   },
 };
 
-export default MovieRecommendations;
+export default Recommendation;

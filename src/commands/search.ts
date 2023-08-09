@@ -24,7 +24,7 @@ const Search: Command = {
         .setDescription('Type de recherche')
         .addChoices(
           { name: 'Film', value: 'Movie' },
-          { name: 'Jeux Vidéo', value: 'VideoGame' }
+          { name: 'Jeu Vidéo', value: 'VideoGame' }
         )
         .setRequired(true)
     )
