@@ -1,4 +1,5 @@
 import {
+  ActivityType,
   Client,
   Events,
   GatewayIntentBits,
@@ -10,11 +11,21 @@ import * as dotenv from 'dotenv';
 import Commands from './commands/index.js';
 import Command from './models/command.js';
 
+import BotDataSource from './dataSource.js';
+import setupSchedulesResolver from './utils/resolveSchedules.js';
+
+/**
+ * Fonction principale du programme.
+ */
 async function main(): Promise<void> {
+  process.title = 'discordbot';
   dotenv.config();
 
-  const { TOKEN, CLIENT_ID, GUILD_ID } = process.env;
+  setupSchedulesResolver();
 
+  const { DISCORD_TOKEN, CLIENT_ID } = process.env;
+
+  // Indique les intentions du bot
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
@@ -23,7 +34,9 @@ async function main(): Promise<void> {
     ],
   });
 
+  // S'execute lorsque le bot est prêt
   client.once(Events.ClientReady, (c) => {
+    client.user.setActivity('Un bon film', { type: ActivityType.Watching });
     console.log(`Prêt! 🟢 Connecté en tant que ${c.user.tag} 🤖`);
   });
 
@@ -38,27 +51,22 @@ async function main(): Promise<void> {
     slashCommands.push(command.data.toJSON());
   }
 
-  const rest = new REST().setToken(TOKEN);
+  const rest = new REST().setToken(DISCORD_TOKEN);
 
+  // Enregistre les commandes pour avoir l'autocomplétion dans discord
   try {
     console.log(
       `Début du rafraichissement de ${slashCommands.length} commandes (/).`
     );
 
-    const data: any[] = (await rest.put(
-      Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
-      { body: slashCommands }
-    )) as any[];
+    const data: any[] = (await rest.put(Routes.applicationCommands(CLIENT_ID), {
+      body: slashCommands,
+    })) as any[];
 
     console.log(`Rechargement réussi de ${data.length} commandes (/).`);
   } catch (error) {
     console.error(error);
   }
-
-  client.on(Events.MessageCreate, async (message) => {
-    // Fonctionnalité seulement en place pour effectuer des tests.
-    console.log(JSON.stringify((await message.fetch()).content));
-  });
 
   // Est lancé lorsqu'un utilisateur lance une commande
   client.on(Events.InteractionCreate, async (interaction) => {
@@ -68,7 +76,7 @@ async function main(): Promise<void> {
     const command = commands.get(interaction.commandName);
 
     // Envoie une erreur si la commande n'existe pas.
-    if (!commands) {
+    if (!command) {
       console.error(
         `Aucune commande correspondant à ${interaction.commandName} n'a été trouvée.`
       );
@@ -81,7 +89,10 @@ async function main(): Promise<void> {
     });
   });
 
-  client.login(TOKEN);
+  client.login(DISCORD_TOKEN);
 }
 
-main();
+// Se connecte à la base de données
+BotDataSource.initialize().then(async () => {
+  main();
+});

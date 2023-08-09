@@ -1,9 +1,16 @@
-import Testbuttons from './testbuttons.js';
+import Recommendation from './recommendation.js';
+import Profile from './profile.js';
+import Helloworld from './helloworld.js';
+import Search from './search.js';
 import Kitten from './kitten.js';
 import Ping from './ping.js';
 
+// Liste des commandes
 const Commands = {
-  Testbuttons,
+  Recommendation,
+  Profile,
+  Helloworld,
+  Search,
   Kitten,
   Ping,
 };

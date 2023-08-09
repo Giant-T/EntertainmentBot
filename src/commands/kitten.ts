@@ -10,7 +10,7 @@ import Command from '../models/command.js';
 // Retourne une belle image de chat à l'utilisateur
 const Kitten: Command = {
   data: new SlashCommandBuilder()
-    .setName('kitten')
+    .setName('chat')
     .setDescription('Petite image sympathique'),
   async execute(interaction: CommandInteraction) {
     const image = new AttachmentBuilder('assets/kitten.jpg');
