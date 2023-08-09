@@ -10,10 +10,10 @@ export default class Game {
 
   constructor(game: any) {
     this.id = game.id;
-    this.genres = game.genres.map((x) => x.name);
+    this.genres = game.genres?.map((x) => x.name) ?? [];
     this.first_release_date = moment.unix(game.first_release_date).toDate();
     this.name = game.name;
-    this.cover = game.cover.image_id;
+    this.cover = game.cover?.image_id ?? '';
     this.summary = game.summary;
   }
 }

@@ -71,16 +71,16 @@ class GameRequester extends Requester {
   }
 
   async getById(id: number): Promise<Entertainment> {
-    return await this.axios.post(
-      'games',
-      `fields id, genres.name, first_release_date, cover.image_id, name, summary; where id = ${id};`
+    return new Entertainment(
+      new Game(
+        (
+          await this.axios.post(
+            'games',
+            `fields id, genres.name, first_release_date, cover.image_id, name, summary; where id = ${id};`
+          )
+        ).data[0]
+      )
     );
-  }
-
-  async getImagePath(coverId: string): Promise<string> {
-    return (
-      await this.axios.post('covers', `where id = ${coverId}; fields image_id;`)
-    ).data.image_id;
   }
 }
 

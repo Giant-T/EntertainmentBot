@@ -45,6 +45,22 @@ const Profile: Command = {
       order: { title: 1 },
     });
 
+    const playedGames = await BotDataSource.mongoManager.find(Consumed, {
+      where: {
+        user_id: user.id,
+        type: EntertainmentType.VideoGame,
+        scheduled_date: { $exists: false },
+      },
+      order: { title: 1 },
+    });
+    const reviewedGames = await BotDataSource.mongoManager.find(Review, {
+      where: {
+        user_id: user.id,
+        type: EntertainmentType.VideoGame,
+      },
+      order: { title: 1 },
+    });
+
     const embed = new EmbedBuilder()
       .setTitle(`Profil de ${user.username}`)
       .setColor(user.accentColor ?? Colors.DarkAqua)
@@ -57,6 +73,14 @@ const Profile: Command = {
         {
           name: "Nombre d'évaluation de films:",
           value: reviewedMovies.length.toString(),
+        },
+        {
+          name: 'Nombre de jeu joués:',
+          value: playedGames.length.toString(),
+        },
+        {
+          name: "Nombre d'évaluation de jeux:",
+          value: reviewedGames.length.toString(),
         }
       );
 
@@ -68,7 +92,15 @@ const Profile: Command = {
       new ButtonBuilder()
         .setLabel('⭐🎬')
         .setCustomId('reviewedMovies')
-        .setStyle(ButtonStyle.Primary)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel('👁️🕹️')
+        .setCustomId('played')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setLabel('⭐🕹️')
+        .setCustomId('reviewedGames')
+        .setStyle(ButtonStyle.Success)
     );
 
     await interaction.editReply({ embeds: [embed], components: [actionRow] });
@@ -95,7 +127,8 @@ const Profile: Command = {
             name: (index + 1).toString(),
             value: value.title,
           }),
-          (interaction, value) => sendDetailedEmbed(interaction, value.item_id)
+          (interaction, value) =>
+            sendDetailedEmbed(interaction, value.item_id, value.type)
         );
       } else if (buttonInteraction.customId === 'reviewedMovies') {
         sendPager(
@@ -107,6 +140,32 @@ const Profile: Command = {
             value: value.rating
               ? `Vous avez donné une note de ${value.rating}.`
               : "Vous n'avez pas donné de note à ce film",
+          }),
+          (interaction, value) =>
+            sendReviewEmbed(interaction, value, user.username)
+        );
+      } else if (buttonInteraction.customId === 'played') {
+        sendPager(
+          buttonInteraction,
+          playedGames,
+          `Jeux joués par ${user.username}`,
+          (value, index) => ({
+            name: (index + 1).toString(),
+            value: value.title,
+          }),
+          (interaction, value) =>
+            sendDetailedEmbed(interaction, value.item_id, value.type)
+        );
+      } else if (buttonInteraction.customId === 'reviewedGames') {
+        sendPager(
+          buttonInteraction,
+          reviewedGames,
+          `Jeux évalués par ${user.username}`,
+          (value, index) => ({
+            name: `${index + 1} - ${value.title}`,
+            value: value.rating
+              ? `Vous avez donné une note de ${value.rating}.`
+              : "Vous n'avez pas donné de note à ce jeu",
           }),
           (interaction, value) =>
             sendReviewEmbed(interaction, value, user.username)

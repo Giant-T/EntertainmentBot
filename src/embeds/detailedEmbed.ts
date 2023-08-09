@@ -22,17 +22,27 @@ import UserInteraction from '../types/userInteraction.js';
 import Review from '../entities/review.js';
 import moment from 'moment';
 import Entertainment from '../types/entertainment.js';
-import EntertainmentType from '../types/entertainmentType.js';
-import GameRequester from '../utils/gameRequester.js';
+import EntertainmentType, {
+  getRequester,
+  getStrings,
+} from '../types/entertainmentType.js';
 
 async function sendDetailedEmbed(
   interaction: UserInteraction,
-  item: Entertainment | number
+  item: Entertainment | number,
+  type?: EntertainmentType
 ) {
-  if (typeof item === 'number' || item.type === EntertainmentType.Movie) {
-    item = await MovieRequester.getInstance().getById(
-      typeof item === 'number' ? item : item.id
-    );
+  if (typeof item === 'number' && type) {
+    item = await getRequester(type).getById(item);
+  }
+
+  if (item instanceof Entertainment && item.type === EntertainmentType.Movie) {
+    item = await MovieRequester.getInstance().getById(item.id);
+  }
+
+  if (!(item instanceof Entertainment)) {
+    interaction.followUp("Impossible de trouver l'article.");
+    return;
   }
 
   const embed = new EmbedBuilder()
@@ -125,7 +135,7 @@ async function markItemAsSeen(
 
   await BotDataSource.mongoManager.updateOne(
     Consumed,
-    { user_id: interaction.user.id, type: 'movie', item_id: item.id },
+    { user_id: interaction.user.id, type: item.type, item_id: item.id },
     {
       $setOnInsert: {
         ...newConsumed,
@@ -134,7 +144,9 @@ async function markItemAsSeen(
     { upsert: true }
   );
 
-  response = `Vous avez maintenant visionné ${item.title}.`;
+  response = `Vous avez maintenant ${getStrings(item.type).get('consumed')} ${
+    item.title
+  }.`;
 
   return response;
 }
@@ -154,7 +166,9 @@ async function rateItem(
     }))
   ) {
     interaction.editReply({
-      content: 'Vous devez regarder le film avant de faire une évaluation.',
+      content: `Vous devez ${getStrings(item.type).get(
+        'mustConsumeBeforeReview'
+      )} avant de faire une évaluation.`,
     });
     return;
   }
@@ -219,7 +233,7 @@ async function rateItem(
       );
 
       selectInteraction.editReply({
-        content: `Vous avez donné une note de ${rating} à ${item.title}.`,
+        content: `Vous avez donné une note de ${rating} à « ${item.title} ».`,
         components: [],
       });
     }
@@ -288,7 +302,7 @@ async function scheduleItem(interaction: UserInteraction, item: Entertainment) {
 
   const actionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(
     new TextInputBuilder()
-      .setLabel('Date de visionnement')
+      .setLabel(`Date de ${getStrings(item.type).get('schedule')}`)
       .setPlaceholder('aaaa-mm-jj')
       .setCustomId('scheduledDate')
       .setStyle(TextInputStyle.Short)
@@ -333,7 +347,9 @@ async function scheduleItem(interaction: UserInteraction, item: Entertainment) {
         },
       })
     ) {
-      submitted.editReply('Vous avez déjà visionné ce film.');
+      submitted.editReply(
+        `Vous avez déjà ${getStrings(item.type).get('consumed')} ce film.`
+      );
       return;
     }
 
@@ -361,9 +377,9 @@ async function scheduleItem(interaction: UserInteraction, item: Entertainment) {
     moment().locale('fr');
 
     submitted.editReply(
-      `Vous avez planifié le visionnement de ${item.title} le ${date.format(
-        'YYYY-MM-DD'
-      )}`
+      `Vous avez planifié le ${getStrings(item.type).get('schedule')} de ${
+        item.title
+      } le ${date.format('YYYY-MM-DD')}`
     );
   }
 }
