@@ -3,11 +3,14 @@ Un bot discord implémenté en Typescript à l'aide de la librairie [Discord.js]
 
 ### Commandes du bot
 --------------------
-### `/profil {utilisateur}`
+### `/profil {utilisateur?}`
 Affiche le profil d'un utilisateur
 
-### `/recherchefilm {requete}`
-Affiche une liste de film selon la requête
+### `/recherche {requete} {type}`
+Affiche une liste de film/jeux selon la requête
+
+### `/recommandation {type} {utilisateur}`
+Affiche une liste de recommandation de film/jeux d'un utilisateur
 
 ### `/hello`
 Hello, World!
@@ -43,6 +46,10 @@ CLIENT_ID='...'
 
 # MOVIE
 MOVIE_TOKEN='...'
+
+# GAME
+GAME_CLIENT_SECRET='...'
+GAME_CLIENT_ID='...'
 
 # DATABASE
 HOST='localhost'

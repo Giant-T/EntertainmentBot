@@ -276,6 +276,24 @@ async function rateItem(
  * @param item L'article à critiquer
  */
 async function reviewItem(interaction: UserInteraction, item: Entertainment) {
+  if (
+    !(await BotDataSource.mongoManager.findOne(Consumed, {
+      where: {
+        item_id: item.id,
+        type: item.type,
+        user_id: interaction.user.id,
+      },
+    }))
+  ) {
+    interaction.reply({
+      ephemeral: true,
+      content: `Vous devez ${getStrings(item.type).get(
+        'mustConsumeBeforeReview'
+      )} avant de faire une évaluation.`,
+    });
+    return;
+  }
+
   const modal = new ModalBuilder()
     .setTitle(item.formatted_title)
     .setCustomId('reviewModal');
@@ -404,7 +422,7 @@ async function scheduleItem(interaction: UserInteraction, item: Entertainment) {
       },
       {
         $set: {
-          scheduled_date: date,
+          scheduled_date: date.toDate(),
         },
         $setOnInsert: {
           title: item.title,

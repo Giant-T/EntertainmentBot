@@ -1,8 +1,7 @@
-import axios, { Axios } from 'axios';
+import axios from 'axios';
 import * as dotenv from 'dotenv';
 import Requester from './requester.js';
 import Entertainment from '../models/entertainment.js';
-import MovieSearchResult from '../models/movieSearchResult.js';
 import DetailedMovie from '../models/detailedMovie.js';
 import Movie from '../models/movie.js';
 
